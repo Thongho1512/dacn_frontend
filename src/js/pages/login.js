@@ -3,7 +3,7 @@ import {login} from "../api/authApi.js";
 // dom elements
 const loginForm = document.getElementById('loginForm');
 const loginButton = document.getElementById('loginButton');
-const alertMessage = document.getElementById('alertMessagge');
+const alertMessage = document.getElementById('alertMessage');
 const tenDangNhapInput = document.getElementById('tenDangNhap');
 const matKhauInput = document.getElementById('matKhau');
 
@@ -12,15 +12,15 @@ function showAlert(message, type){
     alertMessage.textContent = message;
     alertMessage.className = `login__alert login__alert--show login__alert--${type}`;
 
-    setTimeoout(() =>{
+    setTimeout(() => {
         alertMessage.className = 'login__alert';
-    }), 2000;
+    }, 2000);
 }
 
 // Hiển thị trạng thái loading khi đăng nhập
 function setLoadingState(isLoading){
     if(isLoading){
-        loginButton.classList.add('login_button--loading');
+        loginButton.classList.add('login__button--loading');
         loginButton.disabled = true;
         tenDangNhapInput.disabled = true;
         matKhauInput.disabled = true;
@@ -59,7 +59,7 @@ loginForm.addEventListener('submit', async (event) => {
         }
 
         if(response.nguoiDungDto){
-            localStorage.setItem('nguoiDungDto', response.nguoiDungDto);
+            localStorage.setItem('nguoiDungDto', JSON.stringify(response.nguoiDungDto));
         }
 
         setTimeout(() => {
