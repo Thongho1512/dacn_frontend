@@ -19,6 +19,8 @@ export async function getAllUsers(params = {}) {
   return await response.json();
 }
 
+
+
 /**
  * Get user by ID
  * @param {string} id - User ID

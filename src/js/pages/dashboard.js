@@ -132,12 +132,18 @@ async function loadUsers() {
     const searchTerm = searchBox?.getValue() || '';
     
     // Call API with pagination
-    const response = await getAllUsers({
-      pageNumber: currentPage,
-      pageSize: pageSize,
-      active: true,
-      searchTerm: searchTerm || undefined
-    });
+      // build params and only include searchTerm when it's non-empty
+      const params = {
+        pageNumber: currentPage,
+        pageSize: pageSize,
+        active: true,
+      };
+
+      if (searchTerm && searchTerm.length > 0) {
+        params.searchTerm = searchTerm;
+      }
+
+      const response = await getAllUsers(params);
 
     console.log('API Response:', response);
 
