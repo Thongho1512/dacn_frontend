@@ -11,6 +11,7 @@ import { Table } from '../components/table.js';
 import { SearchBox } from '../components/searchBox.js';
 import { UserForm } from '../components/userForm.js';
 import { requireAuth } from '../api/authApi.js';
+import { getAllUsers, createUser, updateUser, deleteUser } from '../api/nguoiDungApi.js';
 import { formatDate } from '../utils/helpers.js';
 
 // Check authentication
@@ -22,6 +23,9 @@ let filteredUsers = [];
 let currentModal = null;
 let currentTable = null;
 let searchBox = null;
+let currentPage = 1;
+let pageSize = 10;
+let totalCount = 0;
 
 // Initialize dashboard
 window.addEventListener('DOMContentLoaded', async () => {
@@ -36,8 +40,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 function initializeLayout() {
   // Initialize Header
   const header = new Header({
-    appTitle: 'AdminPro',
-    logoText: 'A',
+    appTitle: 'Quản lý bán thuốc',
+    logoText: 'QT',
     onMenuToggle: toggleMobileSidebar
   });
 
@@ -48,41 +52,37 @@ function initializeLayout() {
   }
 
   // Initialize Sidebar
-  const sidebar = new Sidebar({
-    activeItem: 'users',
-    menuItems: [
-      {
-        id: 'dashboard',
-        label: 'Dashboard',
-        icon: sidebar.getIcon('dashboard'),
-        href: '/pages/dashboard.html'
-      },
-      {
-        id: 'users',
-        label: 'User Management',
-        icon: sidebar.getIcon('users'),
-        href: '/pages/users.html'
-      },
-      {
-        id: 'products',
-        label: 'Products',
-        icon: sidebar.getIcon('products'),
-        href: '/pages/products.html'
-      },
-      {
-        id: 'orders',
-        label: 'Orders',
-        icon: sidebar.getIcon('orders'),
-        href: '/pages/orders.html'
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        icon: sidebar.getIcon('settings'),
-        href: '/pages/settings.html'
-      }
-    ]
-  });
+  const menuItems = [
+  {
+    id: 'dashboard',
+    label: 'Trang chủ',
+    icon: Sidebar.getIcon('dashboard'), // Gọi trực tiếp từ class Sidebar
+    href: '/pages/dashboard.html'
+  },
+  {
+    id: 'users',
+    label: 'Quản lý người dùng',
+    icon: Sidebar.getIcon('users'),
+    href: '/pages/dashboard.html'
+  },
+  {
+    id: 'products',
+    label: 'Sản phẩm',
+    icon: Sidebar.getIcon('products'),
+    href: '/pages/products.html'
+  },
+  {
+    id: 'orders',
+    label: 'Đơn hàng',
+    icon: Sidebar.getIcon('orders'),
+    href: '/pages/orders.html'
+  }
+];
+
+const sidebar = new Sidebar({
+  activeItem: 'users',
+  menuItems: menuItems
+});
 
   const sidebarContainer = document.getElementById('sidebar-container');
   if (sidebarContainer) {
@@ -92,7 +92,7 @@ function initializeLayout() {
 
   // Initialize Footer
   const footer = new Footer({
-    copyrightText: '© 2024 AdminPro. All rights reserved.',
+    copyrightText: '© 2024 Quản lý bán thuốc. All rights reserved.',
     versionText: 'Version 1.0.0'
   });
 
@@ -105,7 +105,7 @@ function initializeLayout() {
   // Initialize Search Box
   searchBox = new SearchBox({
     containerId: 'search-container',
-    placeholder: 'Search by name or email...',
+    placeholder: 'Tìm kiếm theo tên hoặc tên đăng nhập...',
     onSearch: handleSearch
   });
 
@@ -117,22 +117,54 @@ function initializeLayout() {
 }
 
 /**
- * Load users data
+ * Load users data from API
  */
 async function loadUsers() {
   try {
-    // TODO: Replace with actual API call
-    // const response = await apiGet('v1/users');
-    // users = response.data;
+    showLoading(true);
     
-    // Mock data for demonstration
-    users = generateMockUsers(50);
-    filteredUsers = [...users];
+    const searchTerm = searchBox?.getValue() || '';
     
-    renderUsersTable();
+    // Call API with pagination
+    const response = await getAllUsers({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      active: true,
+      searchTerm: searchTerm || undefined
+    });
+
+    console.log('API Response:', response); // Debug log
+
+    // Backend returns: { success, message, data: { items, pageNumber, pageSize, totalCount } }
+    if (response.success && response.data) {
+      const { items, totalCount: total, pageNumber, pageSize: size } = response.data;
+      
+      users = items || [];
+      filteredUsers = [...users];
+      totalCount = total || 0;
+      currentPage = pageNumber || 1;
+      pageSize = size || 10;
+      
+      console.log('Loaded users:', {
+        count: users.length,
+        total: totalCount,
+        page: currentPage
+      });
+      
+      renderUsersTable();
+    } else {
+      throw new Error(response.message || 'Không thể tải danh sách người dùng');
+    }
   } catch (error) {
     console.error('Failed to load users:', error);
-    showNotification('Failed to load users', 'error');
+    showNotification(error.message || 'Không thể tải danh sách người dùng', 'error');
+    
+    // Show empty table
+    users = [];
+    filteredUsers = [];
+    renderUsersTable();
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -144,64 +176,123 @@ function renderUsersTable() {
     containerId: 'table-container',
     columns: [
       { field: 'id', label: 'ID' },
-      { field: 'name', label: 'Name' },
-      { field: 'email', label: 'Email' },
+      { field: 'tenDangNhap', label: 'Tên đăng nhập' },
+      { field: 'hoTen', label: 'Họ và tên' },
       { 
-        field: 'role', 
-        label: 'Role',
-        render: (value) => `<span class="role-badge role-${value.toLowerCase()}">${value}</span>`
+        field: 'idvaiTro', 
+        label: 'Vai trò',
+        render: (value) => {
+          const roleMap = {
+            1: { label: 'Admin', class: 'role-admin' },
+            2: { label: 'User', class: 'role-user' }
+          };
+          const role = roleMap[value] || { label: 'Unknown', class: 'role-user' };
+          return `<span class="role-badge ${role.class}">${role.label}</span>`;
+        }
       },
       { 
-        field: 'created_date', 
-        label: 'Created Date',
-        render: (value) => formatDate(value, 'short')
+        field: 'ngayTao', 
+        label: 'Ngày tạo',
+        render: (value) => value ? formatDate(value, 'short') : '-'
       },
       {
         field: 'actions',
-        label: 'Actions',
+        label: 'Hành động',
         render: (value, row) => `
           <div class="actions">
-            <button class="btn btn-secondary btn-sm" onclick="window.editUser('${row.id}')">
+            <button class="btn btn-secondary btn-sm" onclick="window.editUser(${row.id})">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l.1.1a1.75 1.75 0 0 1 0 2.475l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25a1.75 1.75 0 0 1 .445-.758l8.61-8.61z"/>
               </svg>
-              Edit
+              Sửa
             </button>
-            <button class="btn btn-danger btn-sm" onclick="window.deleteUser('${row.id}')">
+            <button class="btn btn-danger btn-sm" onclick="window.deleteUser(${row.id})">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M5.5 1a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM3 3.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM4.118 4h5.764l-.459 6.882a.5.5 0 0 1-.498.468H5.075a.5.5 0 0 1-.498-.468L4.118 4z"/>
               </svg>
-              Delete
+              Xóa
             </button>
           </div>
         `
       }
     ],
     data: filteredUsers,
-    itemsPerPage: 10,
-    emptyMessage: 'No users found'
+    itemsPerPage: pageSize,
+    showPagination: false, // Disable client-side pagination, use server-side
+    emptyMessage: 'Không tìm thấy người dùng'
   });
 
   currentTable.render();
+  
+  // Render custom pagination for server-side
+  renderPagination();
 }
+
+/**
+ * Render server-side pagination
+ */
+function renderPagination() {
+  const container = document.getElementById('table-container');
+  if (!container) return;
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+  
+  if (totalPages <= 1) return;
+
+  let paginationHTML = `
+    <div class="pagination" style="display: flex; justify-content: center; gap: 8px; padding: 20px 0;">
+      <button class="page-btn" onclick="window.goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <path d="M8.5 3.5L5 7l3.5 3.5"/>
+        </svg>
+      </button>
+  `;
+
+  // Show page numbers
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+      paginationHTML += `
+        <button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="window.goToPage(${i})">
+          ${i}
+        </button>
+      `;
+    } else if (i === currentPage - 2 || i === currentPage + 2) {
+      paginationHTML += `<span style="padding: 0 4px; color: #94a3b8;">...</span>`;
+    }
+  }
+
+  paginationHTML += `
+      <button class="page-btn" onclick="window.goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <path d="M5.5 3.5L9 7l-3.5 3.5"/>
+        </svg>
+      </button>
+    </div>
+    <div style="text-align: center; color: #64748b; font-size: 14px; padding-bottom: 20px;">
+      Hiển thị ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalCount)} trong tổng số ${totalCount} người dùng
+    </div>
+  `;
+
+  container.insertAdjacentHTML('beforeend', paginationHTML);
+}
+
+/**
+ * Go to page (server-side pagination)
+ */
+window.goToPage = async function(page) {
+  const totalPages = Math.ceil(totalCount / pageSize);
+  if (page < 1 || page > totalPages) return;
+  
+  currentPage = page;
+  await loadUsers();
+};
 
 /**
  * Handle search
  */
-function handleSearch(query) {
-  if (!query) {
-    filteredUsers = [...users];
-  } else {
-    const lowerQuery = query.toLowerCase();
-    filteredUsers = users.filter(user => 
-      user.name.toLowerCase().includes(lowerQuery) ||
-      user.email.toLowerCase().includes(lowerQuery)
-    );
-  }
-
-  if (currentTable) {
-    currentTable.setData(filteredUsers);
-  }
+async function handleSearch(query) {
+  currentPage = 1; // Reset to first page
+  await loadUsers();
 }
 
 /**
@@ -217,7 +308,7 @@ function openAddUserModal() {
 
   currentModal = new Modal({
     id: 'user-modal',
-    title: 'Add New User',
+    title: 'Thêm người dùng mới',
     content: userForm.render(),
     size: 'medium',
     onClose: () => {
@@ -251,7 +342,7 @@ window.editUser = function(userId) {
 
   currentModal = new Modal({
     id: 'user-modal',
-    title: 'Edit User',
+    title: 'Chỉnh sửa người dùng',
     content: userForm.render(),
     size: 'medium',
     onClose: () => {
@@ -272,25 +363,21 @@ window.editUser = function(userId) {
  * Delete user
  */
 window.deleteUser = async function(userId) {
-  if (!confirm('Are you sure you want to delete this user?')) {
+  if (!confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
     return;
   }
 
   try {
-    // TODO: Replace with actual API call
-    // await apiDelete(`v1/users/${userId}`);
+    showLoading(true);
+    await deleteUser(userId);
     
-    users = users.filter(u => u.id !== userId);
-    filteredUsers = filteredUsers.filter(u => u.id !== userId);
-    
-    if (currentTable) {
-      currentTable.setData(filteredUsers);
-    }
-
-    showNotification('User deleted successfully', 'success');
+    showNotification('Xóa người dùng thành công', 'success');
+    await loadUsers(); // Reload data
   } catch (error) {
     console.error('Failed to delete user:', error);
-    showNotification('Failed to delete user', 'error');
+    showNotification(error.message || 'Không thể xóa người dùng', 'error');
+  } finally {
+    showLoading(false);
   }
 };
 
@@ -299,29 +386,22 @@ window.deleteUser = async function(userId) {
  */
 async function handleCreateUser(data) {
   try {
-    // TODO: Replace with actual API call
-    // const response = await apiPost('v1/users', data);
+    console.log('Creating user with data:', data);
     
-    const newUser = {
-      id: `USR${String(users.length + 1).padStart(4, '0')}`,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      created_date: new Date().toISOString()
-    };
+    const response = await createUser(data);
     
-    users.unshift(newUser);
-    filteredUsers = [...users];
-
-    if (currentTable) {
-      currentTable.setData(filteredUsers);
+    console.log('Create user response:', response);
+    
+    if (response.success) {
+      closeModal();
+      showNotification('Tạo người dùng thành công', 'success');
+      await loadUsers(); // Reload data
+    } else {
+      throw new Error(response.message || 'Không thể tạo người dùng');
     }
-
-    closeModal();
-    showNotification('User created successfully', 'success');
   } catch (error) {
     console.error('Failed to create user:', error);
-    showNotification('Failed to create user', 'error');
+    throw error; // Re-throw to be handled by form
   }
 }
 
@@ -330,29 +410,22 @@ async function handleCreateUser(data) {
  */
 async function handleUpdateUser(userId, data) {
   try {
-    // TODO: Replace with actual API call
-    // const response = await apiPut(`v1/users/${userId}`, data);
+    console.log('Updating user', userId, 'with data:', data);
     
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex !== -1) {
-      users[userIndex] = {
-        ...users[userIndex],
-        name: data.name,
-        email: data.email,
-        role: data.role
-      };
-      filteredUsers = [...users];
-      
-      if (currentTable) {
-        currentTable.setData(filteredUsers);
-      }
+    const response = await updateUser(userId, data);
+    
+    console.log('Update user response:', response);
+    
+    if (response.success) {
+      closeModal();
+      showNotification('Cập nhật người dùng thành công', 'success');
+      await loadUsers(); // Reload data
+    } else {
+      throw new Error(response.message || 'Không thể cập nhật người dùng');
     }
-    
-    closeModal();
-    showNotification('User updated successfully', 'success');
   } catch (error) {
     console.error('Failed to update user:', error);
-    showNotification('Failed to update user', 'error');
+    throw error; // Re-throw to be handled by form
   }
 }
 
@@ -397,35 +470,25 @@ function setupEventListeners() {
 }
 
 /**
- * Show notification
+ * Show loading indicator
  */
-function showNotification(message, type = 'info') {
-  // TODO: Implement proper toast notification system
-  console.log(`[${type.toUpperCase()}] ${message}`);
-  alert(message);
+function showLoading(show) {
+  const tableContainer = document.getElementById('table-container');
+  if (!tableContainer) return;
+
+  if (show) {
+    tableContainer.style.opacity = '0.5';
+    tableContainer.style.pointerEvents = 'none';
+  } else {
+    tableContainer.style.opacity = '1';
+    tableContainer.style.pointerEvents = 'auto';
+  }
 }
 
 /**
- * Generate mock users for demonstration
+ * Show notification
  */
-function generateMockUsers(count) {
-  const names = [
-    'John Doe', 'Jane Smith', 'Michael Johnson', 'Emily Williams', 'David Brown',
-    'Sarah Davis', 'James Wilson', 'Jennifer Martinez', 'Robert Anderson', 'Lisa Taylor'
-  ];
-
-  const roles = ['User', 'Manager', 'Admin'];
-  const mockUsers = [];
-
-  for (let i = 1; i <= count; i++) {
-    mockUsers.push({
-      id: `USR${String(i).padStart(4, '0')}`,
-      name: names[Math.floor(Math.random() * names.length)],
-      email: `user${i}@example.com`,
-      role: roles[Math.floor(Math.random() * roles.length)],
-      created_date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString()
-    });
-  }
-
-  return mockUsers;
+function showNotification(message, type = 'info') {
+  console.log(`[${type.toUpperCase()}] ${message}`);
+  alert(message);
 }

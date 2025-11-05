@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập</title>
+    <meta name="description" content="Trang đăng nhập hệ thống quản trị">
+    <title>Đăng nhập - AdminPro</title>
     
-    <!--CSS-->
+    <!-- CSS - No external fonts, using system fonts -->
     <link rel="stylesheet" href="../css/reset.css" />
     <link rel="stylesheet" href="../css/base.css" />
     <link rel="stylesheet" href="../css/login.css" />
 </head>
-<body>
-    <main class ="login">
+<body class="login-page">
+    <main class="login">
         <header class="login__header">
             <h1>Chào mừng trở lại</h1>
             <p>Đăng nhập để tiếp tục</p>
@@ -19,33 +20,51 @@
 
         <div id="alertMessage" class="login__alert"></div>
 
-        <form class="login__form" id="loginForm">
+        <form class="login__form" id="loginForm" autocomplete="on">
             <div class="login__field">
                 <label for="tenDangNhap" class="login__label">Tên đăng nhập</label>
-                <input type="text" id="tenDangNhap" name="tenDangNhap" class="login__input" placeholder="Nhập tên đăng nhập" required autocomplete="tenDangNhap"/>
+                <input 
+                    type="text" 
+                    id="tenDangNhap" 
+                    name="tenDangNhap" 
+                    class="login__input" 
+                    placeholder="Nhập tên đăng nhập" 
+                    required 
+                    autocomplete="username"
+                    aria-label="Tên đăng nhập"
+                />
             </div>
+            
             <div class="login__field">
                 <label for="matKhau" class="login__label">Mật khẩu</label>
-                <input type="password" id="matKhau" name="matKhau" class="login__input" placeholder="Nhập mật khẩu" required autocomplete="matKhau">
+                <input 
+                    type="password" 
+                    id="matKhau" 
+                    name="matKhau" 
+                    class="login__input" 
+                    placeholder="Nhập mật khẩu" 
+                    required 
+                    autocomplete="current-password"
+                    aria-label="Mật khẩu"
+                />
             </div>
 
             <button type="submit" class="login__button" id="loginButton">
                 <span class="login__button-text--default">Đăng nhập</span>
                 <span class="login__button-text--loading">
-                    <span class="login__spinner"></span> Đang xử lý ...
+                    <span class="login__spinner"></span> Đang xử lý...
                 </span> 
             </button>
         </form>
 
         <footer class="login__footer">
             <a href="#" class="login__link">Quên mật khẩu?</a>
-            <span style="margin: 0 8px; color: #ccc">|</span>
-            <a href="#" class="login__link">Đăng kí tài khoản</a>
+            <span>|</span>
+            <a href="#" class="login__link">Đăng ký tài khoản</a>
         </footer>
     </main>
 
-    <!--JS-->
+    <!-- JavaScript Module -->
     <script type="module" src="../js/pages/login.js"></script>
-
 </body>
 </html>

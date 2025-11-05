@@ -1,6 +1,7 @@
 /**
  * UserForm Component
  * Form for creating/editing users
+ * Matches backend CreateNguoiDungDto and UpdateNguoiDungDto
  */
 
 export class UserForm {
@@ -22,76 +23,92 @@ export class UserForm {
     return `
       <form id="${this.config.formId}" class="user-form">
         <div class="form-group">
-          <label class="form-label" for="${this.config.formId}-name">
-            Name <span class="required">*</span>
+          <label class="form-label" for="${this.config.formId}-tenDangNhap">
+            Tên đăng nhập <span class="required">*</span>
           </label>
           <input 
             type="text" 
             class="form-input" 
-            id="${this.config.formId}-name" 
-            name="name"
-            value="${userData.name || ''}"
-            placeholder="Enter full name"
+            id="${this.config.formId}-tenDangNhap" 
+            name="tenDangNhap"
+            value="${userData.tenDangNhap || ''}"
+            placeholder="Nhập tên đăng nhập"
+            ${isEditMode ? 'readonly' : ''}
             required
           />
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="${this.config.formId}-email">
-            Email <span class="required">*</span>
+          <label class="form-label" for="${this.config.formId}-hoTen">
+            Họ và tên <span class="required">*</span>
           </label>
           <input 
-            type="email" 
+            type="text" 
             class="form-input" 
-            id="${this.config.formId}-email" 
-            name="email"
-            value="${userData.email || ''}"
-            placeholder="Enter email address"
+            id="${this.config.formId}-hoTen" 
+            name="hoTen"
+            value="${userData.hoTen || ''}"
+            placeholder="Nhập họ và tên"
             required
           />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="${this.config.formId}-role">
-            Role <span class="required">*</span>
-          </label>
-          <select 
-            class="form-select" 
-            id="${this.config.formId}-role" 
-            name="role"
-            required
-          >
-            <option value="">Select role</option>
-            <option value="User" ${userData.role === 'User' ? 'selected' : ''}>User</option>
-            <option value="Manager" ${userData.role === 'Manager' ? 'selected' : ''}>Manager</option>
-            <option value="Admin" ${userData.role === 'Admin' ? 'selected' : ''}>Admin</option>
-          </select>
         </div>
 
         ${!isEditMode ? `
           <div class="form-group">
-            <label class="form-label" for="${this.config.formId}-password">
-              Password <span class="required">*</span>
+            <label class="form-label" for="${this.config.formId}-matKhau">
+              Mật khẩu <span class="required">*</span>
             </label>
             <input 
               type="password" 
               class="form-input" 
-              id="${this.config.formId}-password" 
-              name="password"
-              placeholder="Enter password"
+              id="${this.config.formId}-matKhau" 
+              name="matKhau"
+              placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
               required
             />
           </div>
         ` : ''}
 
+        <div class="form-group">
+          <label class="form-label" for="${this.config.formId}-idvaiTro">
+            Vai trò
+          </label>
+          <select 
+            class="form-select" 
+            id="${this.config.formId}-idvaiTro" 
+            name="idvaiTro"
+          >
+            <option value="">Chọn vai trò (mặc định: USER)</option>
+            <option value="1" ${userData.idvaiTro === 1 ? 'selected' : ''}>Admin</option>
+            <option value="2" ${userData.idvaiTro === 2 ? 'selected' : ''}>User</option>
+          </select>
+          <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+            Để trống sẽ tự động gán vai trò USER
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="${this.config.formId}-idchiNhanh">
+            Chi nhánh
+          </label>
+          <input 
+            type="number" 
+            class="form-input" 
+            id="${this.config.formId}-idchiNhanh" 
+            name="idchiNhanh"
+            value="${userData.idchiNhanh || ''}"
+            placeholder="ID chi nhánh (tùy chọn)"
+          />
+        </div>
+
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" id="${this.config.formId}-cancel">
-            Cancel
+            Hủy
           </button>
           <button type="submit" class="btn btn-primary" id="${this.config.formId}-submit">
-            <span class="btn-text">${isEditMode ? 'Update User' : 'Create User'}</span>
+            <span class="btn-text">${isEditMode ? 'Cập nhật' : 'Tạo mới'}</span>
             <span class="btn-loading" style="display: none;">
-              <span class="loading-spinner"></span> Processing...
+              <span class="loading-spinner"></span> Đang xử lý...
             </span>
           </button>
         </div>
@@ -124,7 +141,21 @@ export class UserForm {
     if (!form) return;
 
     const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    const data = {};
+    
+    // Convert FormData to object and handle empty values
+    for (const [key, value] of formData.entries()) {
+      if (value === '') {
+        data[key] = null;
+      } else if (key === 'idvaiTro' || key === 'idchiNhanh') {
+        // Convert to number if not empty
+        data[key] = value ? parseInt(value) : null;
+      } else {
+        data[key] = value;
+      }
+    }
+
+    console.log('Form data to submit:', data); // Debug log
 
     // Validate
     if (!this.validate(data)) {
@@ -140,35 +171,28 @@ export class UserForm {
       }
     } catch (error) {
       console.error('Form submission error:', error);
-      this.showError('An error occurred. Please try again.');
+      this.showError(error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.');
     } finally {
       this.setLoadingState(false);
     }
   }
 
   validate(data) {
+    // Username validation
+    if (!data.tenDangNhap || data.tenDangNhap.trim().length < 3) {
+      this.showError('Tên đăng nhập phải có ít nhất 3 ký tự');
+      return false;
+    }
+
     // Name validation
-    if (!data.name || data.name.trim().length < 2) {
-      this.showError('Name must be at least 2 characters long');
-      return false;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!data.email || !emailRegex.test(data.email)) {
-      this.showError('Please enter a valid email address');
-      return false;
-    }
-
-    // Role validation
-    if (!data.role) {
-      this.showError('Please select a role');
+    if (!data.hoTen || data.hoTen.trim().length < 2) {
+      this.showError('Họ tên phải có ít nhất 2 ký tự');
       return false;
     }
 
     // Password validation (only for create mode)
-    if (this.config.mode === 'create' && (!data.password || data.password.length < 6)) {
-      this.showError('Password must be at least 6 characters long');
+    if (this.config.mode === 'create' && (!data.matKhau || data.matKhau.length < 6)) {
+      this.showError('Mật khẩu phải có ít nhất 6 ký tự');
       return false;
     }
 
@@ -190,12 +214,16 @@ export class UserForm {
       if (submitBtn) submitBtn.disabled = false;
       if (btnText) btnText.style.display = 'inline';
       if (btnLoading) btnLoading.style.display = 'none';
-      inputs.forEach(input => input.disabled = false);
+      inputs.forEach(input => {
+        // Don't enable username input in edit mode
+        if (!(this.config.mode === 'edit' && input.name === 'tenDangNhap')) {
+          input.disabled = false;
+        }
+      });
     }
   }
 
   showError(message) {
-    // You can implement a toast/alert system here
     alert(message);
   }
 
@@ -211,7 +239,13 @@ export class UserForm {
     if (!form) return null;
 
     const formData = new FormData(form);
-    return Object.fromEntries(formData.entries());
+    const data = {};
+    
+    for (const [key, value] of formData.entries()) {
+      data[key] = value || null;
+    }
+    
+    return data;
   }
 
   destroy() {

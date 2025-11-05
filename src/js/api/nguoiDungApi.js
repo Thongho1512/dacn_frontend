@@ -7,12 +7,13 @@ import { apiFetch } from "./baseApi.js";
  */
 export async function getAllUsers(params = {}) {
   const queryString = new URLSearchParams(params).toString();
-  const url = `v1/nguoi-dung${queryString ? '?' + queryString : ''}`;
+  const url = `v1/nguoidungs${queryString ? '?' + queryString : ''}`;
   
   const response = await apiFetch(url);
   
   if (!response.ok) {
-    throw new Error('Failed to fetch users');
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch users');
   }
   
   return await response.json();
@@ -24,10 +25,11 @@ export async function getAllUsers(params = {}) {
  * @returns {Promise<Object>} User data
  */
 export async function getUserById(id) {
-  const response = await apiFetch(`v1/nguoi-dung/${id}`);
+  const response = await apiFetch(`v1/nguoidungs/${id}`);
   
   if (!response.ok) {
-    throw new Error('Failed to fetch user');
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch user');
   }
   
   return await response.json();
@@ -39,13 +41,14 @@ export async function getUserById(id) {
  * @returns {Promise<Object>} Created user
  */
 export async function createUser(userData) {
-  const response = await apiFetch('v1/nguoi-dung', {
+  const response = await apiFetch('v1/nguoidungs', {
     method: 'POST',
     body: JSON.stringify(userData)
   });
   
   if (!response.ok) {
-    throw new Error('Failed to create user');
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create user');
   }
   
   return await response.json();
@@ -58,13 +61,14 @@ export async function createUser(userData) {
  * @returns {Promise<Object>} Updated user
  */
 export async function updateUser(id, userData) {
-  const response = await apiFetch(`v1/nguoi-dung/${id}`, {
+  const response = await apiFetch(`v1/nguoidungs/${id}`, {
     method: 'PUT',
     body: JSON.stringify(userData)
   });
   
   if (!response.ok) {
-    throw new Error('Failed to update user');
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update user');
   }
   
   return await response.json();
@@ -76,11 +80,12 @@ export async function updateUser(id, userData) {
  * @returns {Promise<void>}
  */
 export async function deleteUser(id) {
-  const response = await apiFetch(`v1/nguoi-dung/${id}`, {
+  const response = await apiFetch(`v1/nguoidungs/${id}`, {
     method: 'DELETE'
   });
   
   if (!response.ok) {
-    throw new Error('Failed to delete user');
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete user');
   }
 }
