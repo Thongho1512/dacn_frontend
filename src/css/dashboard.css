@@ -3,6 +3,19 @@
  * Styles specific to the dashboard page
  */
 
+/**
+ * Dashboard Styles
+ * Styles specific to the dashboard page
+ */
+
+/* Dashboard Body Override */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+
 /* Dashboard Container */
 .dashboard-container {
   display: flex;

@@ -1,5 +1,5 @@
 import { apiFetch } from "../api/baseApi.js";
-import { saveAccessToken, removeAccessToken } from "../utils/token.js";
+import { saveAccessToken, removeAccessToken, getAccessToken } from "../utils/token.js";
 import { API_BASE_URL } from "../config.js";
 
 export async function login(username, password) {
@@ -18,6 +18,63 @@ export async function login(username, password) {
 }
 
 export async function logout() {
-  await apiFetch("v1/auth/logout", { method: "POST" });
-  removeAccessToken();
+  try {
+    await apiFetch("v1/auth/logout", { method: "POST" });
+  } catch (error) {
+    console.error("Logout error:", error);
+  } finally {
+    removeAccessToken();
+    window.location.href = "/pages/login.html";
+  }
+}
+
+/**
+ * Check if user is authenticated
+ * Redirect to login if not authenticated
+ */
+export function requireAuth() {
+  const token = getAccessToken();
+  
+  if (!token) {
+    window.location.href = "/pages/login.html";
+    return false;
+  }
+  
+  // Check if token is expired
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp * 1000; // Convert to milliseconds
+    
+    if (Date.now() >= exp) {
+      removeAccessToken();
+      window.location.href = "/pages/login.html";
+      return false;
+    }
+  } catch (error) {
+    console.error("Invalid token:", error);
+    removeAccessToken();
+    window.location.href = "/pages/login.html";
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Check if user is authenticated (without redirect)
+ */
+export function isAuthenticated() {
+  const token = getAccessToken();
+  
+  if (!token) {
+    return false;
+  }
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp * 1000;
+    return Date.now() < exp;
+  } catch (error) {
+    return false;
+  }
 }
