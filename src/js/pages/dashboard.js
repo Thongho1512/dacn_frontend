@@ -51,38 +51,44 @@ function initializeLayout() {
     header.attachEventListeners();
   }
 
-  // Initialize Sidebar
-  const menuItems = [
-  {
-    id: 'dashboard',
-    label: 'Trang chủ',
-    icon: Sidebar.getIcon('dashboard'), // Gọi trực tiếp từ class Sidebar
-    href: '/pages/dashboard.html'
-  },
-  {
-    id: 'users',
-    label: 'Quản lý người dùng',
-    icon: Sidebar.getIcon('users'),
-    href: '/pages/dashboard.html'
-  },
-  {
-    id: 'products',
-    label: 'Sản phẩm',
-    icon: Sidebar.getIcon('products'),
-    href: '/pages/products.html'
-  },
-  {
-    id: 'orders',
-    label: 'Đơn hàng',
-    icon: Sidebar.getIcon('orders'),
-    href: '/pages/orders.html'
-  }
-];
-
-const sidebar = new Sidebar({
-  activeItem: 'users',
-  menuItems: menuItems
-});
+  // Initialize Sidebar with custom menu items
+  const sidebar = new Sidebar({
+    activeItem: 'users',
+    menuItems: [
+      {
+        id: 'dashboard',
+        label: 'Trang chủ',
+        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6zM14 9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-2z"/>
+        </svg>`,
+        href: '/pages/dashboard.html'
+      },
+      {
+        id: 'users',
+        label: 'Quản lý người dùng',
+        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0zM17 16a7 7 0 1 0-14 0h14zM3 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/>
+        </svg>`,
+        href: '/pages/dashboard.html'
+      },
+      {
+        id: 'products',
+        label: 'Sản phẩm',
+        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/>
+        </svg>`,
+        href: '/pages/products.html'
+      },
+      {
+        id: 'orders',
+        label: 'Đơn hàng',
+        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M3 1a1 1 0 0 0 0 2h1.22l.305 1.222a.997.997 0 0 0 .01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 0 0 0-2H6.414l1-1H14a1 1 0 0 0 .894-.553l3-6A1 1 0 0 0 17 3H6.28l-.31-1.243A1 1 0 0 0 5 1H3zM16 16.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM6.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+        </svg>`,
+        href: '/pages/orders.html'
+      }
+    ]
+  });
 
   const sidebarContainer = document.getElementById('sidebar-container');
   if (sidebarContainer) {
@@ -133,7 +139,7 @@ async function loadUsers() {
       searchTerm: searchTerm || undefined
     });
 
-    console.log('API Response:', response); // Debug log
+    console.log('API Response:', response);
 
     // Backend returns: { success, message, data: { items, pageNumber, pageSize, totalCount } }
     if (response.success && response.data) {
@@ -218,7 +224,7 @@ function renderUsersTable() {
     ],
     data: filteredUsers,
     itemsPerPage: pageSize,
-    showPagination: false, // Disable client-side pagination, use server-side
+    showPagination: false,
     emptyMessage: 'Không tìm thấy người dùng'
   });
 
@@ -291,7 +297,7 @@ window.goToPage = async function(page) {
  * Handle search
  */
 async function handleSearch(query) {
-  currentPage = 1; // Reset to first page
+  currentPage = 1;
   await loadUsers();
 }
 
@@ -372,7 +378,7 @@ window.deleteUser = async function(userId) {
     await deleteUser(userId);
     
     showNotification('Xóa người dùng thành công', 'success');
-    await loadUsers(); // Reload data
+    await loadUsers();
   } catch (error) {
     console.error('Failed to delete user:', error);
     showNotification(error.message || 'Không thể xóa người dùng', 'error');
@@ -395,13 +401,13 @@ async function handleCreateUser(data) {
     if (response.success) {
       closeModal();
       showNotification('Tạo người dùng thành công', 'success');
-      await loadUsers(); // Reload data
+      await loadUsers();
     } else {
       throw new Error(response.message || 'Không thể tạo người dùng');
     }
   } catch (error) {
     console.error('Failed to create user:', error);
-    throw error; // Re-throw to be handled by form
+    throw error;
   }
 }
 
@@ -419,13 +425,13 @@ async function handleUpdateUser(userId, data) {
     if (response.success) {
       closeModal();
       showNotification('Cập nhật người dùng thành công', 'success');
-      await loadUsers(); // Reload data
+      await loadUsers();
     } else {
       throw new Error(response.message || 'Không thể cập nhật người dùng');
     }
   } catch (error) {
     console.error('Failed to update user:', error);
-    throw error; // Re-throw to be handled by form
+    throw error;
   }
 }
 

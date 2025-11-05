@@ -24,7 +24,7 @@ export async function logout() {
     console.error("Logout error:", error);
   } finally {
     removeAccessToken();
-    window.location.href = "/pages/login.html";
+    window.location.href = "../src/pages/login.html";
   }
 }
 
@@ -36,7 +36,7 @@ export function requireAuth() {
   const token = getAccessToken();
   
   if (!token) {
-    window.location.href = "/pages/login.html";
+    window.location.href = "../src/pages/login.html";
     return false;
   }
   
@@ -47,13 +47,13 @@ export function requireAuth() {
     
     if (Date.now() >= exp) {
       removeAccessToken();
-      window.location.href = "/pages/login.html";
+      window.location.href = "../src/pages/login.html";
       return false;
     }
   } catch (error) {
     console.error("Invalid token:", error);
     removeAccessToken();
-    window.location.href = "/pages/login.html";
+    window.location.href = "../src/pages/login.html";
     return false;
   }
   
