@@ -1,0 +1,32 @@
+/* reset.css */
+
+/* Xóa margin, padding mặc định */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Xóa style mặc định của link */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Xóa bullet trong list */
+ul, ol {
+  list-style: none;
+}
+
+/* Xóa viền mặc định của button, input */
+button, input {
+  border: none;
+  outline: none;
+  background: none;
+  font: inherit;
+}
+
+/* Đặt font mặc định */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
