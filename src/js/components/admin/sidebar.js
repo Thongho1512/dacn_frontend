@@ -19,7 +19,7 @@ export class Sidebar {
         id: 'dashboard',
         label: 'Dashboard',
         icon: this.getIcon('dashboard'),
-        href: '/pages/dashboard.html'
+        href: '/pages/index.html'
       },
       {
         id: 'users',

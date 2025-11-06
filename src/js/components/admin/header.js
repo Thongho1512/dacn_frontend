@@ -3,8 +3,8 @@
  * Renders the application header with logo, notifications, and user profile
  */
 
-import { getUserFromToken } from '../utils/token.js';
-import { logout } from '../api/authApi.js';
+import { getUserFromToken } from '../../utils/token.js';
+import { logout } from '../../api/authApi.js';
 
 export class Header {
   constructor(config = {}) {

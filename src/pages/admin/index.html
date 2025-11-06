@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard - Trang quản trị">
+  <title>Dashboard - AdminPro</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  
+  <style>
+    /* Dashboard Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .stat-card__title {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .stat-card__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .stat-card__icon--blue {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .stat-card__icon--green {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .stat-card__icon--yellow {
+      background: #fefce8;
+      color: #ca8a04;
+    }
+
+    .stat-card__icon--purple {
+      background: #faf5ff;
+      color: #9333ea;
+    }
+
+    .stat-card__value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .stat-card__change {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-card__change--up {
+      color: #16a34a;
+    }
+
+    .stat-card__change--down {
+      color: #dc2626;
+    }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .chart-card__title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 20px;
+    }
+
+    .chart-placeholder {
+      height: 300px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* Recent Activity */
+    .activity-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .activity-card__title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 20px;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-item__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #eff6ff;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .activity-item__content {
+      flex: 1;
+    }
+
+    .activity-item__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .activity-item__description {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .activity-item__time {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Header -->
+    <div id="header"></div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div id="sidebar-container"></div>
+
+      <!-- Content Area -->
+      <main class="content-area">
+        <div class="page-header">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">Chào mừng trở lại! Đây là tổng quan hệ thống của bạn.</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card__header">
+              <div class="stat-card__title">Tổng người dùng</div>
+              <div class="stat-card__icon stat-card__icon--blue">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-card__value" id="total-users">0</div>
+            <div class="stat-card__change stat-card__change--up">
+              <span>↑ 12%</span>
+              <span>so với tháng trước</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__header">
+              <div class="stat-card__title">Sản phẩm</div>
+              <div class="stat-card__icon stat-card__icon--green">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-card__value">1,234</div>
+            <div class="stat-card__change stat-card__change--up">
+              <span>↑ 8%</span>
+              <span>so với tháng trước</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__header">
+              <div class="stat-card__title">Đơn hàng</div>
+              <div class="stat-card__icon stat-card__icon--yellow">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-card__value">856</div>
+            <div class="stat-card__change stat-card__change--down">
+              <span>↓ 3%</span>
+              <span>so với tháng trước</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__header">
+              <div class="stat-card__title">Doanh thu</div>
+              <div class="stat-card__icon stat-card__icon--purple">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-card__value">₫45M</div>
+            <div class="stat-card__change stat-card__change--up">
+              <span>↑ 18%</span>
+              <span>so với tháng trước</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h2 class="chart-card__title">Doanh thu theo tháng</h2>
+            <div class="chart-placeholder">
+              📊 Biểu đồ doanh thu
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <h2 class="chart-card__title">Sản phẩm bán chạy</h2>
+            <div class="chart-placeholder">
+              📈 Biểu đồ sản phẩm
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-card">
+          <h2 class="activity-card__title">Hoạt động gần đây</h2>
+          
+          <div class="activity-item">
+            <div class="activity-item__icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 10c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </div>
+            <div class="activity-item__content">
+              <div class="activity-item__title">Người dùng mới đã đăng ký</div>
+              <div class="activity-item__description">Nguyễn Văn A vừa tạo tài khoản mới</div>
+            </div>
+            <div class="activity-item__time">5 phút trước</div>
+          </div>
+
+          <div class="activity-item">
+            <div class="activity-item__icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+              </svg>
+            </div>
+            <div class="activity-item__content">
+              <div class="activity-item__title">Đơn hàng mới</div>
+              <div class="activity-item__description">Đơn hàng #1234 đã được đặt</div>
+            </div>
+            <div class="activity-item__time">15 phút trước</div>
+          </div>
+
+          <div class="activity-item">
+            <div class="activity-item__icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/>
+              </svg>
+            </div>
+            <div class="activity-item__content">
+              <div class="activity-item__title">Sản phẩm mới</div>
+              <div class="activity-item__description">Thuốc ABC đã được thêm vào kho</div>
+            </div>
+            <div class="activity-item__time">1 giờ trước</div>
+          </div>
+
+          <div class="activity-item">
+            <div class="activity-item__icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 10c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </div>
+            <div class="activity-item__content">
+              <div class="activity-item__title">Cập nhật hồ sơ</div>
+              <div class="activity-item__description">Trần Thị B đã cập nhật thông tin cá nhân</div>
+            </div>
+            <div class="activity-item__time">2 giờ trước</div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer"></div>
+  </div>
+
+  <!-- JavaScript Module -->
+  <script type="module" src="../../js/pages/admin/index.js"></script>
+</body>
+</html>

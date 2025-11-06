@@ -1,23 +1,22 @@
 /**
- * Dashboard Page
- * Main dashboard with user management
+ * Users Management Page
+ * Quản lý người dùng
  */
 
-import { Header } from '../components/header.js';
-import { Sidebar } from '../components/sidebar.js';
-import { Footer } from '../components/footer.js';
-import { Modal } from '../components/modal.js';
-import { Table } from '../components/table.js';
-import { SearchBox } from '../components/searchBox.js';
-import { UserForm } from '../components/userForm.js';
-import { requireAuth } from '../api/authApi.js';
-import { getAllUsers, createUser, updateUser, deleteUser } from '../api/nguoiDungApi.js';
-import { formatDate } from '../utils/helpers.js';
+import { Header } from '../../components/admin/header.js';
+import { Sidebar } from '../../components/admin/sidebar.js';
+import { Footer } from '../../components/admin/footer.js';
+import { Modal } from '../../components/admin/modal.js';
+import { Table } from '../../components/admin/table.js';
+import { SearchBox } from '../../components/admin/searchBox.js';
+import { requireAuth } from '../../api/authApi.js';
+import { getAllUsers, createUser, updateUser, deleteUser } from '../../api/nguoiDungApi.js';
+import { formatDate } from '../../utils/helpers.js';
 
 // Check authentication
 requireAuth();
 
-// State management
+// State
 let users = [];
 let filteredUsers = [];
 let currentModal = null;
@@ -26,8 +25,9 @@ let searchBox = null;
 let currentPage = 1;
 let pageSize = 10;
 let totalCount = 0;
+let currentEditingUserId = null;
 
-// Initialize dashboard
+// Initialize
 window.addEventListener('DOMContentLoaded', async () => {
   initializeLayout();
   await loadUsers();
@@ -38,7 +38,7 @@ window.addEventListener('DOMContentLoaded', async () => {
  * Initialize page layout
  */
 function initializeLayout() {
-  // Initialize Header
+  // Header
   const header = new Header({
     appTitle: 'Quản lý bán thuốc',
     logoText: 'QT',
@@ -51,7 +51,7 @@ function initializeLayout() {
     header.attachEventListeners();
   }
 
-  // Initialize Sidebar with custom menu items
+  // Sidebar
   const sidebar = new Sidebar({
     activeItem: 'users',
     menuItems: [
@@ -61,7 +61,7 @@ function initializeLayout() {
         icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6zM14 9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-2z"/>
         </svg>`,
-        href: '/pages/dashboard.html'
+        href: '/src/pages/admin/index.html'
       },
       {
         id: 'users',
@@ -69,7 +69,7 @@ function initializeLayout() {
         icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path d="M9 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0zM17 16a7 7 0 1 0-14 0h14zM3 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/>
         </svg>`,
-        href: '/pages/dashboard.html'
+        href: '/src/pages/admin/nguoiDung.html'
       },
       {
         id: 'products',
@@ -77,15 +77,7 @@ function initializeLayout() {
         icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/>
         </svg>`,
-        href: '/pages/products.html'
-      },
-      {
-        id: 'orders',
-        label: 'Đơn hàng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M3 1a1 1 0 0 0 0 2h1.22l.305 1.222a.997.997 0 0 0 .01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 0 0 0-2H6.414l1-1H14a1 1 0 0 0 .894-.553l3-6A1 1 0 0 0 17 3H6.28l-.31-1.243A1 1 0 0 0 5 1H3zM16 16.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM6.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
-        </svg>`,
-        href: '/pages/orders.html'
+        href: '/src/pages/admin/products.html'
       }
     ]
   });
@@ -96,7 +88,7 @@ function initializeLayout() {
     sidebar.attachEventListeners();
   }
 
-  // Initialize Footer
+  // Footer
   const footer = new Footer({
     copyrightText: '© 2024 Quản lý bán thuốc. All rights reserved.',
     versionText: 'Version 1.0.0'
@@ -108,7 +100,7 @@ function initializeLayout() {
     footer.attachEventListeners();
   }
 
-  // Initialize Search Box
+  // Search Box
   searchBox = new SearchBox({
     containerId: 'search-container',
     placeholder: 'Tìm kiếm theo tên hoặc tên đăng nhập...',
@@ -123,7 +115,7 @@ function initializeLayout() {
 }
 
 /**
- * Load users data from API
+ * Load users from API
  */
 async function loadUsers() {
   try {
@@ -131,23 +123,18 @@ async function loadUsers() {
     
     const searchTerm = searchBox?.getValue() || '';
     
-    // Call API with pagination
-      // build params and only include searchTerm when it's non-empty
-      const params = {
-        pageNumber: currentPage,
-        pageSize: pageSize,
-        active: true,
-      };
+    const params = {
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      active: true,
+    };
 
-      if (searchTerm && searchTerm.length > 0) {
-        params.searchTerm = searchTerm;
-      }
+    if (searchTerm && searchTerm.length > 0) {
+      params.searchTerm = searchTerm;
+    }
 
-      const response = await getAllUsers(params);
+    const response = await getAllUsers(params);
 
-    console.log('API Response:', response);
-
-    // Backend returns: { success, message, data: { items, pageNumber, pageSize, totalCount } }
     if (response.success && response.data) {
       const { items, totalCount: total, pageNumber, pageSize: size } = response.data;
       
@@ -157,12 +144,6 @@ async function loadUsers() {
       currentPage = pageNumber || 1;
       pageSize = size || 10;
       
-      console.log('Loaded users:', {
-        count: users.length,
-        total: totalCount,
-        page: currentPage
-      });
-      
       renderUsersTable();
     } else {
       throw new Error(response.message || 'Không thể tải danh sách người dùng');
@@ -171,7 +152,6 @@ async function loadUsers() {
     console.error('Failed to load users:', error);
     showNotification(error.message || 'Không thể tải danh sách người dùng', 'error');
     
-    // Show empty table
     users = [];
     filteredUsers = [];
     renderUsersTable();
@@ -235,13 +215,11 @@ function renderUsersTable() {
   });
 
   currentTable.render();
-  
-  // Render custom pagination for server-side
   renderPagination();
 }
 
 /**
- * Render server-side pagination
+ * Render pagination
  */
 function renderPagination() {
   const container = document.getElementById('table-container');
@@ -252,7 +230,7 @@ function renderPagination() {
   if (totalPages <= 1) return;
 
   let paginationHTML = `
-    <div class="pagination" style="display: flex; justify-content: center; gap: 8px; padding: 20px 0;">
+    <div class="pagination">
       <button class="page-btn" onclick="window.goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
           <path d="M8.5 3.5L5 7l3.5 3.5"/>
@@ -260,7 +238,6 @@ function renderPagination() {
       </button>
   `;
 
-  // Show page numbers
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       paginationHTML += `
@@ -289,7 +266,7 @@ function renderPagination() {
 }
 
 /**
- * Go to page (server-side pagination)
+ * Go to page
  */
 window.goToPage = async function(page) {
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -311,29 +288,28 @@ async function handleSearch(query) {
  * Open add user modal
  */
 function openAddUserModal() {
-  const userForm = new UserForm({
-    formId: 'user-form',
-    mode: 'create',
-    onSubmit: handleCreateUser,
-    onCancel: closeModal
-  });
-
+  currentEditingUserId = null;
+  
+  const template = document.getElementById('user-form-template');
+  const formContent = template.content.cloneNode(true);
+  
+  const tempDiv = document.createElement('div');
+  tempDiv.appendChild(formContent);
+  
   currentModal = new Modal({
     id: 'user-modal',
     title: 'Thêm người dùng mới',
-    content: userForm.render(),
-    size: 'medium',
-    onClose: () => {
-      userForm.destroy();
-    }
+    content: tempDiv.innerHTML,
+    size: 'medium'
   });
 
   const modalRoot = document.getElementById('modal-root');
   if (modalRoot) {
     modalRoot.innerHTML = currentModal.render();
     currentModal.attachEventListeners();
-    userForm.attachEventListeners();
     currentModal.open();
+    
+    setupFormEventListeners();
   }
 }
 
@@ -344,32 +320,165 @@ window.editUser = function(userId) {
   const user = users.find(u => u.id === userId);
   if (!user) return;
 
-  const userForm = new UserForm({
-    formId: 'user-form',
-    mode: 'edit',
-    userData: user,
-    onSubmit: (data) => handleUpdateUser(userId, data),
-    onCancel: closeModal
-  });
-
+  currentEditingUserId = userId;
+  
+  const template = document.getElementById('user-form-template');
+  const formContent = template.content.cloneNode(true);
+  
+  const tempDiv = document.createElement('div');
+  tempDiv.appendChild(formContent);
+  
   currentModal = new Modal({
     id: 'user-modal',
     title: 'Chỉnh sửa người dùng',
-    content: userForm.render(),
-    size: 'medium',
-    onClose: () => {
-      userForm.destroy();
-    }
+    content: tempDiv.innerHTML,
+    size: 'medium'
   });
 
   const modalRoot = document.getElementById('modal-root');
   if (modalRoot) {
     modalRoot.innerHTML = currentModal.render();
     currentModal.attachEventListeners();
-    userForm.attachEventListeners();
     currentModal.open();
+    
+    setupFormEventListeners();
+    fillFormData(user);
   }
 };
+
+/**
+ * Fill form with user data
+ */
+function fillFormData(user) {
+  document.getElementById('tenDangNhap').value = user.tenDangNhap || '';
+  document.getElementById('hoTen').value = user.hoTen || '';
+  document.getElementById('matKhau').value = '';
+  document.getElementById('idvaiTro').value = user.idvaiTro || '';
+  document.getElementById('idchiNhanh').value = user.idchiNhanh || '';
+  document.getElementById('trangThai').value = user.trangThai ? 'true' : 'false';
+}
+
+/**
+ * Setup form event listeners
+ */
+function setupFormEventListeners() {
+  const form = document.getElementById('user-form');
+  const cancelBtn = document.getElementById('cancel-btn');
+  
+  if (form) {
+    form.addEventListener('submit', handleFormSubmit);
+  }
+  
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeModal);
+  }
+}
+
+/**
+ * Handle form submit
+ */
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = {};
+  
+  for (const [key, value] of formData.entries()) {
+    if (['idvaiTro', 'idchiNhanh'].includes(key)) {
+      data[key] = parseInt(value);
+    } else if (key === 'trangThai') {
+      data[key] = value === 'true';
+    } else {
+      data[key] = value.trim();
+    }
+  }
+  
+  if (!validateForm(data)) {
+    return;
+  }
+  
+  setFormLoading(true);
+  
+  try {
+    let response;
+    
+    if (currentEditingUserId) {
+      response = await updateUser(currentEditingUserId, data);
+    } else {
+      response = await createUser(data);
+    }
+    
+    if (response.success) {
+      closeModal();
+      showNotification(
+        currentEditingUserId ? 'Cập nhật người dùng thành công' : 'Tạo người dùng thành công',
+        'success'
+      );
+      await loadUsers();
+    } else {
+      throw new Error(response.message || 'Không thể lưu người dùng');
+    }
+  } catch (error) {
+    console.error('Form submission error:', error);
+    showNotification(error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.', 'error');
+  } finally {
+    setFormLoading(false);
+  }
+}
+
+/**
+ * Validate form
+ */
+function validateForm(data) {
+  if (!data.tenDangNhap || data.tenDangNhap.length < 3) {
+    showNotification('Tên đăng nhập phải có ít nhất 3 ký tự', 'error');
+    return false;
+  }
+
+  if (!data.hoTen || data.hoTen.length < 2) {
+    showNotification('Họ tên phải có ít nhất 2 ký tự', 'error');
+    return false;
+  }
+
+  if (!data.matKhau || data.matKhau.length < 6) {
+    showNotification('Mật khẩu phải có ít nhất 6 ký tự', 'error');
+    return false;
+  }
+
+  if (!data.idvaiTro || isNaN(data.idvaiTro)) {
+    showNotification('Vui lòng chọn vai trò', 'error');
+    return false;
+  }
+
+  if (!data.idchiNhanh || isNaN(data.idchiNhanh)) {
+    showNotification('Vui lòng nhập ID chi nhánh hợp lệ', 'error');
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Set form loading state
+ */
+function setFormLoading(isLoading) {
+  const submitBtn = document.getElementById('submit-btn');
+  const btnText = submitBtn?.querySelector('.btn-text');
+  const btnLoading = submitBtn?.querySelector('.btn-loading');
+  const inputs = document.querySelectorAll('#user-form input, #user-form select');
+
+  if (isLoading) {
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.style.display = 'none';
+    if (btnLoading) btnLoading.style.display = 'inline-flex';
+    inputs.forEach(input => input.disabled = true);
+  } else {
+    if (submitBtn) submitBtn.disabled = false;
+    if (btnText) btnText.style.display = 'inline';
+    if (btnLoading) btnLoading.style.display = 'none';
+    inputs.forEach(input => input.disabled = false);
+  }
+}
 
 /**
  * Delete user
@@ -394,54 +503,6 @@ window.deleteUser = async function(userId) {
 };
 
 /**
- * Handle create user
- */
-async function handleCreateUser(data) {
-  try {
-    console.log('Creating user with data:', data);
-    
-    const response = await createUser(data);
-    
-    console.log('Create user response:', response);
-    
-    if (response.success) {
-      closeModal();
-      showNotification('Tạo người dùng thành công', 'success');
-      await loadUsers();
-    } else {
-      throw new Error(response.message || 'Không thể tạo người dùng');
-    }
-  } catch (error) {
-    console.error('Failed to create user:', error);
-    throw error;
-  }
-}
-
-/**
- * Handle update user
- */
-async function handleUpdateUser(userId, data) {
-  try {
-    console.log('Updating user', userId, 'with data:', data);
-    
-    const response = await updateUser(userId, data);
-    
-    console.log('Update user response:', response);
-    
-    if (response.success) {
-      closeModal();
-      showNotification('Cập nhật người dùng thành công', 'success');
-      await loadUsers();
-    } else {
-      throw new Error(response.message || 'Không thể cập nhật người dùng');
-    }
-  } catch (error) {
-    console.error('Failed to update user:', error);
-    throw error;
-  }
-}
-
-/**
  * Close modal
  */
 function closeModal() {
@@ -449,6 +510,7 @@ function closeModal() {
     currentModal.close();
     currentModal = null;
   }
+  currentEditingUserId = null;
 }
 
 /**
@@ -482,7 +544,7 @@ function setupEventListeners() {
 }
 
 /**
- * Show loading indicator
+ * Show loading
  */
 function showLoading(show) {
   const tableContainer = document.getElementById('table-container');
@@ -501,6 +563,5 @@ function showLoading(show) {
  * Show notification
  */
 function showNotification(message, type = 'info') {
-  console.log(`[${type.toUpperCase()}] ${message}`);
   alert(message);
 }

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Quản lý người dùng">
+  <title>Quản lý người dùng - AdminPro</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Header -->
+    <div id="header"></div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div id="sidebar-container"></div>
+
+      <!-- Content Area -->
+      <main class="content-area">
+        <div class="page-header">
+          <h1 class="page-title">Quản lý người dùng</h1>
+          <p class="page-subtitle">Danh sách và quản lý tài khoản người dùng</p>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div id="search-container"></div>
+          
+          <button class="btn btn-primary" id="add-user-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Thêm người dùng
+          </button>
+        </div>
+
+        <!-- Table Container -->
+        <div id="table-container"></div>
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer"></div>
+  </div>
+
+  <!-- Modal Root -->
+  <div id="modal-root"></div>
+
+  <!-- Modal Form Template -->
+  <template id="user-form-template">
+    <form id="user-form" class="user-form">
+      <!-- Tên đăng nhập -->
+      <div class="form-group">
+        <label class="form-label" for="tenDangNhap">
+          Tên đăng nhập <span class="required">*</span>
+        </label>
+        <input 
+          type="text" 
+          class="form-input" 
+          id="tenDangNhap" 
+          name="tenDangNhap"
+          placeholder="Nhập tên đăng nhập"
+          required
+        />
+      </div>
+
+      <!-- Họ tên -->
+      <div class="form-group">
+        <label class="form-label" for="hoTen">
+          Họ và tên <span class="required">*</span>
+        </label>
+        <input 
+          type="text" 
+          class="form-input" 
+          id="hoTen" 
+          name="hoTen"
+          placeholder="Nhập họ và tên"
+          required
+        />
+      </div>
+
+      <!-- Mật khẩu -->
+      <div class="form-group">
+        <label class="form-label" for="matKhau">
+          Mật khẩu <span class="required">*</span>
+        </label>
+        <input 
+          type="password" 
+          class="form-input" 
+          id="matKhau" 
+          name="matKhau"
+          placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+        />
+      </div>
+
+      <!-- Vai trò -->
+      <div class="form-group">
+        <label class="form-label" for="idvaiTro">
+          Vai trò <span class="required">*</span>
+        </label>
+        <select 
+          class="form-select" 
+          id="idvaiTro" 
+          name="idvaiTro"
+          required
+        >
+          <option value="">Chọn vai trò</option>
+          <option value="1">Admin</option>
+          <option value="2">User</option>
+        </select>
+      </div>
+
+      <!-- Chi nhánh -->
+      <div class="form-group">
+        <label class="form-label" for="idchiNhanh">
+          Chi nhánh <span class="required">*</span>
+        </label>
+        <input 
+          type="number" 
+          class="form-input" 
+          id="idchiNhanh" 
+          name="idchiNhanh"
+          placeholder="Nhập ID chi nhánh"
+        />
+      </div>
+
+      <!-- Trạng thái -->
+      <div class="form-group">
+        <label class="form-label" for="trangThai">
+          Trạng thái <span class="required">*</span>
+        </label>
+        <select 
+          class="form-select"
+          id="trangThai"
+          name="trangThai"
+          required
+        >
+          <option value="true">Hoạt động</option>
+          <option value="false">Ngừng hoạt động</option>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-btn">
+          Hủy
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <span class="btn-text">Lưu</span>
+          <span class="btn-loading" style="display: none;">
+            <span class="loading-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+
+  <!-- JavaScript Module -->
+  <script type="module" src="../../js/pages/admin/nguoiDung.js"></script>
+</body>
+</html>
