@@ -19,12 +19,27 @@ export async function login(username, password) {
 
 export async function logout() {
   try {
+    // Call logout API
     await apiFetch("v1/auth/logout", { method: "POST" });
   } catch (error) {
     console.error("Logout error:", error);
   } finally {
+    // Clean up local storage
     removeAccessToken();
-    window.location.href = "../src/pages/login.html";
+    
+    // Clear all session storage
+    sessionStorage.clear();
+    
+    // Clear browser cache for this origin (if supported)
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    
+    // Force reload and redirect to login
+    // Using replace to prevent back button issues
+    window.location.replace("/src/pages/login.html");
   }
 }
 
@@ -36,7 +51,7 @@ export function requireAuth() {
   const token = getAccessToken();
   
   if (!token) {
-    window.location.href = "../src/pages/login.html";
+    window.location.replace("/src/pages/login.html");
     return false;
   }
   
@@ -47,13 +62,13 @@ export function requireAuth() {
     
     if (Date.now() >= exp) {
       removeAccessToken();
-      window.location.href = "../src/pages/login.html";
+      window.location.replace("/src/pages/login.html");
       return false;
     }
   } catch (error) {
     console.error("Invalid token:", error);
     removeAccessToken();
-    window.location.href = "../src/pages/login.html";
+    window.location.replace("/src/pages/login.html");
     return false;
   }
   

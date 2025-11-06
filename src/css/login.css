@@ -1,6 +1,7 @@
 /**
  * Modern Login Page Styles
  * Beautiful gradient design with smooth animations
+ * NO EXTERNAL FONTS - Using system fonts only
  */
 
 /* Login Page Body */
@@ -13,6 +14,9 @@ body.login-page {
   padding: 20px;
   position: relative;
   overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
 }
 
 /* Animated background effect */
