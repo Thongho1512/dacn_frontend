@@ -58,11 +58,11 @@ function initializeLayout() {
       },
       {
         id: 'products',
-        label: 'Sản phẩm',
+        label: 'Quản lý thuốc',
         icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/>
         </svg>`,
-        href: '/src/pages/admin/products.html'
+        href: '/src/pages/admin/thuoc.html'
       }
     ]
   });

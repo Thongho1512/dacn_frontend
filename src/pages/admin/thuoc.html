@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quản lý thuốc - Hệ thống quản lý bán thuốc" />
+  <title>Quản lý thuốc - AdminPro</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/base.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <!-- ============================================ -->
+    <!-- HEADER -->
+    <!-- ============================================ -->
+    <div id="header"></div>
+
+    <!-- ============================================ -->
+    <!-- SIDEBAR OVERLAY (Mobile) -->
+    <!-- ============================================ -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ============================================ -->
+    <!-- MAIN LAYOUT -->
+    <!-- ============================================ -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div id="sidebar-container"></div>
+
+      <!-- ============================================ -->
+      <!-- CONTENT AREA -->
+      <!-- ============================================ -->
+      <main class="content-area">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">Quản lý thuốc</h1>
+          <p class="page-subtitle">Danh sách và quản lý thuốc trong hệ thống</p>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TOOLBAR (Search + Add Button) -->
+        <!-- ============================================ -->
+        <div class="toolbar">
+          <div id="search-container"></div>
+
+          <button class="btn btn-primary" id="add-thuoc-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path
+                d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+            </svg>
+            Thêm thuốc
+          </button>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TABLE CONTAINER -->
+        <!-- ============================================ -->
+        <div id="table-container"></div>
+      </main>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================ -->
+    <div id="footer"></div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- MODAL ROOT -->
+  <!-- ============================================ -->
+  <div id="modal-root"></div>
+
+  <!-- ============================================ -->
+  <!-- FORM TEMPLATE (Hidden) -->
+  <!-- ============================================ -->
+  <template id="thuoc-form-template">
+    <form id="thuoc-form" class="thuoc-form">
+      <!-- ========================================== -->
+      <!-- TÊN THUỐC -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="tenThuoc">
+          Tên thuốc <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-input"
+          id="tenThuoc"
+          name="tenThuoc"
+          placeholder="Ví dụ: Paracetamol 500mg"
+          required />
+      </div>
+
+      <!-- ========================================== -->
+      <!-- HOẠT CHẤT -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="hoatChat">Hoạt chất</label>
+        <input
+          type="text"
+          class="form-input"
+          id="hoatChat"
+          name="hoatChat"
+          placeholder="Ví dụ: Acetaminophen" />
+      </div>
+
+      <!-- ========================================== -->
+      <!-- ĐƠN VỊ -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="donVi">
+          Đơn vị <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-input"
+          id="donVi"
+          name="donVi"
+          placeholder="Ví dụ: Viên, Hộp, Chai, Lọ..."
+          required />
+      </div>
+
+      <!-- ========================================== -->
+      <!-- GIÁ BÁN -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="giaBan">
+          Giá bán (VNĐ) <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          class="form-input"
+          id="giaBan"
+          name="giaBan"
+          placeholder="Ví dụ: 50000"
+          min="0"
+          step="1000"
+          required />
+      </div>
+
+      <!-- ========================================== -->
+      <!-- DANH MỤC -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="iddanhMuc">Danh mục</label>
+        <input
+          type="number"
+          class="form-input"
+          id="iddanhMuc"
+          name="iddanhMuc"
+          placeholder="Nhập ID danh mục (nếu có)" />
+        <small class="form-note">
+          Để trống nếu chưa có danh mục
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- MÔ TẢ -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="moTa">Mô tả</label>
+        <textarea
+          class="form-input"
+          id="moTa"
+          name="moTa"
+          placeholder="Nhập mô tả chi tiết về thuốc: công dụng, cách dùng, liều dùng..."
+          rows="4"></textarea>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TRẠNG THÁI -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="trangThai">
+          Trạng thái <span class="required">*</span>
+        </label>
+        <select class="form-select" id="trangThai" name="trangThai" required>
+          <option value="true">✅ Hoạt động</option>
+          <option value="false">🚫 Ngừng hoạt động</option>
+        </select>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- FORM ACTIONS -->
+      <!-- ========================================== -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-btn">
+          Hủy
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <span class="btn-text">💾 Lưu</span>
+          <span class="btn-loading" style="display: none">
+            <span class="loading-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+
+  <!-- ============================================ -->
+  <!-- JAVASCRIPT -->
+  <!-- ============================================ -->
+  <script type="module" src="../../js/pages/admin/thuoc.js"></script>
+</body>
+</html>

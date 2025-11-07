@@ -1,6 +1,6 @@
 /**
- * Users Management Page
- * Quản lý người dùng - Full Display
+ * Medicines Management Page
+ * Quản lý thuốc - Full Display
  */
 
 import { Header } from '../../components/admin/header.js';
@@ -10,27 +10,26 @@ import { Modal } from '../../components/admin/modal.js';
 import { Table } from '../../components/admin/table.js';
 import { SearchBox } from '../../components/admin/searchBox.js';
 import { requireAuth } from '../../api/authApi.js';
-import { getAllUsers, createUser, updateUser, deleteUser } from '../../api/nguoiDungApi.js';
-import { formatDate } from '../../utils/helpers.js';
+import { getAllThuoc, createThuoc, updateThuoc, deleteThuoc } from '../../api/thuocApi.js';
 
 // Check authentication
 requireAuth();
 
 // State
-let users = [];
-let filteredUsers = [];
+let thuocs = [];
+let filteredThuocs = [];
 let currentModal = null;
 let currentTable = null;
 let searchBox = null;
 let currentPage = 1;
 let pageSize = 10;
 let totalCount = 0;
-let currentEditingUserId = null;
+let currentEditingThuocId = null;
 
 // Initialize
 window.addEventListener('DOMContentLoaded', async () => {
   initializeLayout();
-  await loadUsers();
+  await loadThuocs();
   setupEventListeners();
 });
 
@@ -53,7 +52,7 @@ function initializeLayout() {
 
   // Sidebar
   const sidebar = new Sidebar({
-    activeItem: 'users',
+    activeItem: 'thuoc',
     menuItems: [
       {
         id: 'dashboard',
@@ -72,10 +71,10 @@ function initializeLayout() {
         href: '/src/pages/admin/nguoiDung.html'
       },
       {
-        id: 'products',
+        id: 'thuoc',
         label: 'Quản lý thuốc',
         icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/>
+          <path d="M10 2a1 1 0 0 1 1 1v1.323l3.954 1.582 1.599-.8a1 1 0 0 1 1.346 1.098l-.164 1.638 1.638.164A1 1 0 0 1 18.3 8.952l-.8 1.6L19.323 14a1 1 0 0 1-1.098 1.346l-1.638-.164-.164 1.638a1 1 0 0 1-1.346 1.098l-1.6-.8L10 19.323V21a1 1 0 1 1-2 0v-1.323l-3.954-1.582-1.599.8a1 1 0 0 1-1.346-1.098l.164-1.638-1.638-.164A1 1 0 0 1 1.7 15.048l.8-1.6L.677 10a1 1 0 0 1 1.098-1.346l1.638.164.164-1.638A1 1 0 0 1 4.923 6.08l1.6.8L10 4.677V3a1 1 0 0 1 1-1z"/>
         </svg>`,
         href: '/src/pages/admin/thuoc.html'
       }
@@ -103,7 +102,7 @@ function initializeLayout() {
   // Search Box
   searchBox = new SearchBox({
     containerId: 'search-container',
-    placeholder: 'Tìm kiếm theo tên hoặc tên đăng nhập...',
+    placeholder: 'Tìm kiếm theo tên thuốc hoặc hoạt chất...',
     onSearch: handleSearch
   });
 
@@ -115,9 +114,9 @@ function initializeLayout() {
 }
 
 /**
- * Load users from API
+ * Load medicines from API
  */
-async function loadUsers() {
+async function loadThuocs() {
   try {
     showLoading(true);
     
@@ -133,37 +132,37 @@ async function loadUsers() {
       params.searchTerm = searchTerm;
     }
 
-    const response = await getAllUsers(params);
+    const response = await getAllThuoc(params);
 
     if (response.success && response.data) {
       const { items, totalCount: total, pageNumber, pageSize: size } = response.data;
       
-      users = items || [];
-      filteredUsers = [...users];
+      thuocs = items || [];
+      filteredThuocs = [...thuocs];
       totalCount = total || 0;
       currentPage = pageNumber || 1;
       pageSize = size || 10;
       
-      renderUsersTable();
+      renderThuocsTable();
     } else {
-      throw new Error(response.message || 'Không thể tải danh sách người dùng');
+      throw new Error(response.message || 'Không thể tải danh sách thuốc');
     }
   } catch (error) {
-    console.error('Failed to load users:', error);
-    showNotification(error.message || 'Không thể tải danh sách người dùng', 'error');
+    console.error('Failed to load medicines:', error);
+    showNotification(error.message || 'Không thể tải danh sách thuốc', 'error');
     
-    users = [];
-    filteredUsers = [];
-    renderUsersTable();
+    thuocs = [];
+    filteredThuocs = [];
+    renderThuocsTable();
   } finally {
     showLoading(false);
   }
 }
 
 /**
- * Render users table with ALL fields
+ * Render medicines table
  */
-function renderUsersTable() {
+function renderThuocsTable() {
   currentTable = new Table({
     containerId: 'table-container',
     columns: [
@@ -173,31 +172,35 @@ function renderUsersTable() {
         render: (value) => `<strong>#${value}</strong>`
       },
       { 
-        field: 'tenDangNhap', 
-        label: 'Tên đăng nhập',
-        render: (value) => `<span style="font-weight: 600;">${value}</span>`
+        field: 'tenThuoc', 
+        label: 'Tên thuốc',
+        render: (value) => `<span style="font-weight: 600;">${value || 'N/A'}</span>`
       },
       { 
-        field: 'hoTen', 
-        label: 'Họ và tên',
+        field: 'hoatChat', 
+        label: 'Hoạt chất',
         render: (value) => value || '<span style="color: #94a3b8;">Chưa cập nhật</span>'
       },
       { 
-        field: 'idvaiTro', 
-        label: 'Vai trò',
+        field: 'donVi', 
+        label: 'Đơn vị',
+        render: (value) => value || 'N/A'
+      },
+      { 
+        field: 'giaBan', 
+        label: 'Giá bán',
         render: (value) => {
-          const roleMap = {
-            1: { label: 'Admin', class: 'role-admin' },
-            2: { label: 'User', class: 'role-user' }
-          };
-          const role = roleMap[value] || { label: 'Unknown', class: 'role-user' };
-          return `<span class="role-badge ${role.class}">${role.label}</span>`;
+          if (!value) return '<span style="color: #94a3b8;">0 ₫</span>';
+          return `<span style="color: #16a34a; font-weight: 600;">${formatCurrency(value)}</span>`;
         }
       },
       { 
-        field: 'idchiNhanh', 
-        label: 'Chi nhánh',
-        render: (value) => value ? `Chi nhánh ${value}` : '<span style="color: #94a3b8;">Chưa gán</span>'
+        field: 'tenDanhMuc', 
+        label: 'Danh mục',
+        render: (value) => {
+          if (!value) return '<span style="color: #94a3b8;">Chưa phân loại</span>';
+          return `<span class="role-badge role-user">${value}</span>`;
+        }
       },
       { 
         field: 'trangThai', 
@@ -210,23 +213,18 @@ function renderUsersTable() {
           }
         }
       },
-      { 
-        field: 'ngayTao', 
-        label: 'Ngày tạo',
-        render: (value) => value ? formatDate(value, 'short') : '-'
-      },
       {
         field: 'actions',
         label: 'Hành động',
         render: (value, row) => `
           <div class="actions">
-            <button class="btn btn-secondary btn-sm" onclick="window.editUser(${row.id})" title="Chỉnh sửa">
+            <button class="btn btn-secondary btn-sm" onclick="window.editThuoc(${row.id})" title="Chỉnh sửa">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l.1.1a1.75 1.75 0 0 1 0 2.475l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25a1.75 1.75 0 0 1 .445-.758l8.61-8.61z"/>
               </svg>
               Sửa
             </button>
-            <button class="btn btn-danger btn-sm" onclick="window.deleteUser(${row.id})" title="Xóa">
+            <button class="btn btn-danger btn-sm" onclick="window.deleteThuoc(${row.id})" title="Xóa">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M5.5 1a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM3 3.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM4.118 4h5.764l-.459 6.882a.5.5 0 0 1-.498.468H5.075a.5.5 0 0 1-.498-.468L4.118 4z"/>
               </svg>
@@ -236,14 +234,24 @@ function renderUsersTable() {
         `
       }
     ],
-    data: filteredUsers,
+    data: filteredThuocs,
     itemsPerPage: pageSize,
     showPagination: false,
-    emptyMessage: 'Không tìm thấy người dùng'
+    emptyMessage: 'Không tìm thấy thuốc'
   });
 
   currentTable.render();
   renderPagination();
+}
+
+/**
+ * Format currency
+ */
+function formatCurrency(value) {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(value);
 }
 
 /**
@@ -286,7 +294,7 @@ function renderPagination() {
       </button>
     </div>
     <div style="text-align: center; color: #64748b; font-size: 14px; padding-bottom: 20px; margin-top: 16px;">
-      Hiển thị ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalCount)} trong tổng số ${totalCount} người dùng
+      Hiển thị ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalCount)} trong tổng số ${totalCount} thuốc
     </div>
   `;
 
@@ -301,7 +309,7 @@ window.goToPage = async function(page) {
   if (page < 1 || page > totalPages) return;
   
   currentPage = page;
-  await loadUsers();
+  await loadThuocs();
 };
 
 /**
@@ -309,24 +317,24 @@ window.goToPage = async function(page) {
  */
 async function handleSearch(query) {
   currentPage = 1;
-  await loadUsers();
+  await loadThuocs();
 }
 
 /**
- * Open add user modal
+ * Open add medicine modal
  */
-function openAddUserModal() {
-  currentEditingUserId = null;
+function openAddThuocModal() {
+  currentEditingThuocId = null;
   
-  const template = document.getElementById('user-form-template');
+  const template = document.getElementById('thuoc-form-template');
   const formContent = template.content.cloneNode(true);
   
   const tempDiv = document.createElement('div');
   tempDiv.appendChild(formContent);
   
   currentModal = new Modal({
-    id: 'user-modal',
-    title: 'Thêm người dùng mới',
+    id: 'thuoc-modal',
+    title: 'Thêm thuốc mới',
     content: tempDiv.innerHTML,
     size: 'medium'
   });
@@ -342,23 +350,23 @@ function openAddUserModal() {
 }
 
 /**
- * Edit user
+ * Edit medicine
  */
-window.editUser = function(userId) {
-  const user = users.find(u => u.id === userId);
-  if (!user) return;
+window.editThuoc = function(thuocId) {
+  const thuoc = thuocs.find(t => t.id === thuocId);
+  if (!thuoc) return;
 
-  currentEditingUserId = userId;
+  currentEditingThuocId = thuocId;
   
-  const template = document.getElementById('user-form-template');
+  const template = document.getElementById('thuoc-form-template');
   const formContent = template.content.cloneNode(true);
   
   const tempDiv = document.createElement('div');
   tempDiv.appendChild(formContent);
   
   currentModal = new Modal({
-    id: 'user-modal',
-    title: 'Chỉnh sửa người dùng',
+    id: 'thuoc-modal',
+    title: 'Chỉnh sửa thuốc',
     content: tempDiv.innerHTML,
     size: 'medium'
   });
@@ -370,27 +378,28 @@ window.editUser = function(userId) {
     currentModal.open();
     
     setupFormEventListeners();
-    fillFormData(user);
+    fillFormData(thuoc);
   }
 };
 
 /**
- * Fill form with user data
+ * Fill form with medicine data
  */
-function fillFormData(user) {
-  document.getElementById('tenDangNhap').value = user.tenDangNhap || '';
-  document.getElementById('hoTen').value = user.hoTen || '';
-  document.getElementById('matKhau').value = '';
-  document.getElementById('idvaiTro').value = user.idvaiTro || '';
-  document.getElementById('idchiNhanh').value = user.idchiNhanh || '';
-  document.getElementById('trangThai').value = user.trangThai ? 'true' : 'false';
+function fillFormData(thuoc) {
+  document.getElementById('tenThuoc').value = thuoc.tenThuoc || '';
+  document.getElementById('hoatChat').value = thuoc.hoatChat || '';
+  document.getElementById('donVi').value = thuoc.donVi || '';
+  document.getElementById('giaBan').value = thuoc.giaBan || '';
+  document.getElementById('iddanhMuc').value = thuoc.iddanhMuc || '';
+  document.getElementById('moTa').value = thuoc.moTa || '';
+  document.getElementById('trangThai').value = thuoc.trangThai ? 'true' : 'false';
 }
 
 /**
  * Setup form event listeners
  */
 function setupFormEventListeners() {
-  const form = document.getElementById('user-form');
+  const form = document.getElementById('thuoc-form');
   const cancelBtn = document.getElementById('cancel-btn');
   
   if (form) {
@@ -412,8 +421,10 @@ async function handleFormSubmit(e) {
   const data = {};
   
   for (const [key, value] of formData.entries()) {
-    if (['idvaiTro', 'idchiNhanh'].includes(key)) {
-      data[key] = parseInt(value);
+    if (key === 'iddanhMuc') {
+      data[key] = value ? parseInt(value) : null;
+    } else if (key === 'giaBan') {
+      data[key] = value ? parseFloat(value) : null;
     } else if (key === 'trangThai') {
       data[key] = value === 'true';
     } else {
@@ -430,21 +441,21 @@ async function handleFormSubmit(e) {
   try {
     let response;
     
-    if (currentEditingUserId) {
-      response = await updateUser(currentEditingUserId, data);
+    if (currentEditingThuocId) {
+      response = await updateThuoc(currentEditingThuocId, data);
     } else {
-      response = await createUser(data);
+      response = await createThuoc(data);
     }
     
     if (response.success) {
       closeModal();
       showNotification(
-        currentEditingUserId ? 'Cập nhật người dùng thành công' : 'Tạo người dùng thành công',
+        currentEditingThuocId ? 'Cập nhật thuốc thành công' : 'Tạo thuốc thành công',
         'success'
       );
-      await loadUsers();
+      await loadThuocs();
     } else {
-      throw new Error(response.message || 'Không thể lưu người dùng');
+      throw new Error(response.message || 'Không thể lưu thuốc');
     }
   } catch (error) {
     console.error('Form submission error:', error);
@@ -458,28 +469,18 @@ async function handleFormSubmit(e) {
  * Validate form
  */
 function validateForm(data) {
-  if (!data.tenDangNhap || data.tenDangNhap.length < 3) {
-    showNotification('Tên đăng nhập phải có ít nhất 3 ký tự', 'error');
+  if (!data.tenThuoc || data.tenThuoc.length < 2) {
+    showNotification('Tên thuốc phải có ít nhất 2 ký tự', 'error');
     return false;
   }
 
-  if (!data.hoTen || data.hoTen.length < 2) {
-    showNotification('Họ tên phải có ít nhất 2 ký tự', 'error');
+  if (!data.donVi || data.donVi.length < 1) {
+    showNotification('Vui lòng nhập đơn vị', 'error');
     return false;
   }
 
-  if (!data.matKhau || data.matKhau.length < 6) {
-    showNotification('Mật khẩu phải có ít nhất 6 ký tự', 'error');
-    return false;
-  }
-
-  if (!data.idvaiTro || isNaN(data.idvaiTro)) {
-    showNotification('Vui lòng chọn vai trò', 'error');
-    return false;
-  }
-
-  if (!data.idchiNhanh || isNaN(data.idchiNhanh)) {
-    showNotification('Vui lòng nhập ID chi nhánh hợp lệ', 'error');
+  if (!data.giaBan || data.giaBan <= 0) {
+    showNotification('Giá bán phải lớn hơn 0', 'error');
     return false;
   }
 
@@ -493,7 +494,7 @@ function setFormLoading(isLoading) {
   const submitBtn = document.getElementById('submit-btn');
   const btnText = submitBtn?.querySelector('.btn-text');
   const btnLoading = submitBtn?.querySelector('.btn-loading');
-  const inputs = document.querySelectorAll('#user-form input, #user-form select');
+  const inputs = document.querySelectorAll('#thuoc-form input, #thuoc-form select, #thuoc-form textarea');
 
   if (isLoading) {
     if (submitBtn) submitBtn.disabled = true;
@@ -509,22 +510,22 @@ function setFormLoading(isLoading) {
 }
 
 /**
- * Delete user
+ * Delete medicine
  */
-window.deleteUser = async function(userId) {
-  if (!confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+window.deleteThuoc = async function(thuocId) {
+  if (!confirm('Bạn có chắc chắn muốn xóa thuốc này?')) {
     return;
   }
 
   try {
     showLoading(true);
-    await deleteUser(userId);
+    await deleteThuoc(thuocId);
     
-    showNotification('Xóa người dùng thành công', 'success');
-    await loadUsers();
+    showNotification('Xóa thuốc thành công', 'success');
+    await loadThuocs();
   } catch (error) {
-    console.error('Failed to delete user:', error);
-    showNotification(error.message || 'Không thể xóa người dùng', 'error');
+    console.error('Failed to delete medicine:', error);
+    showNotification(error.message || 'Không thể xóa thuốc', 'error');
   } finally {
     showLoading(false);
   }
@@ -538,7 +539,7 @@ function closeModal() {
     currentModal.close();
     currentModal = null;
   }
-  currentEditingUserId = null;
+  currentEditingThuocId = null;
 }
 
 /**
@@ -560,9 +561,9 @@ function toggleMobileSidebar() {
  * Setup event listeners
  */
 function setupEventListeners() {
-  const addUserBtn = document.getElementById('add-user-btn');
-  if (addUserBtn) {
-    addUserBtn.addEventListener('click', openAddUserModal);
+  const addThuocBtn = document.getElementById('add-thuoc-btn');
+  if (addThuocBtn) {
+    addThuocBtn.addEventListener('click', openAddThuocModal);
   }
 
   const sidebarOverlay = document.getElementById('sidebar-overlay');
