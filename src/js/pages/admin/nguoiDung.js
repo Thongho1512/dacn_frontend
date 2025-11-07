@@ -1,6 +1,6 @@
 /**
  * Users Management Page
- * Quản lý người dùng
+ * Quản lý người dùng - Full Display
  */
 
 import { Header } from '../../components/admin/header.js';
@@ -161,15 +161,27 @@ async function loadUsers() {
 }
 
 /**
- * Render users table
+ * Render users table with ALL fields
  */
 function renderUsersTable() {
   currentTable = new Table({
     containerId: 'table-container',
     columns: [
-      { field: 'id', label: 'ID' },
-      { field: 'tenDangNhap', label: 'Tên đăng nhập' },
-      { field: 'hoTen', label: 'Họ và tên' },
+      { 
+        field: 'id', 
+        label: 'ID',
+        render: (value) => `<strong>#${value}</strong>`
+      },
+      { 
+        field: 'tenDangNhap', 
+        label: 'Tên đăng nhập',
+        render: (value) => `<span style="font-weight: 600;">${value}</span>`
+      },
+      { 
+        field: 'hoTen', 
+        label: 'Họ và tên',
+        render: (value) => value || '<span style="color: #94a3b8;">Chưa cập nhật</span>'
+      },
       { 
         field: 'idvaiTro', 
         label: 'Vai trò',
@@ -183,6 +195,22 @@ function renderUsersTable() {
         }
       },
       { 
+        field: 'idchiNhanh', 
+        label: 'Chi nhánh',
+        render: (value) => value ? `Chi nhánh ${value}` : '<span style="color: #94a3b8;">Chưa gán</span>'
+      },
+      { 
+        field: 'trangThai', 
+        label: 'Trạng thái',
+        render: (value) => {
+          if (value === true) {
+            return '<span class="role-badge" style="background: #d1fae5; color: #065f46;">🟢 Hoạt động</span>';
+          } else {
+            return '<span class="role-badge" style="background: #fee2e2; color: #991b1b;">🔴 Ngừng</span>';
+          }
+        }
+      },
+      { 
         field: 'ngayTao', 
         label: 'Ngày tạo',
         render: (value) => value ? formatDate(value, 'short') : '-'
@@ -192,13 +220,13 @@ function renderUsersTable() {
         label: 'Hành động',
         render: (value, row) => `
           <div class="actions">
-            <button class="btn btn-secondary btn-sm" onclick="window.editUser(${row.id})">
+            <button class="btn btn-secondary btn-sm" onclick="window.editUser(${row.id})" title="Chỉnh sửa">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l.1.1a1.75 1.75 0 0 1 0 2.475l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25a1.75 1.75 0 0 1 .445-.758l8.61-8.61z"/>
               </svg>
               Sửa
             </button>
-            <button class="btn btn-danger btn-sm" onclick="window.deleteUser(${row.id})">
+            <button class="btn btn-danger btn-sm" onclick="window.deleteUser(${row.id})" title="Xóa">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M5.5 1a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM3 3.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM4.118 4h5.764l-.459 6.882a.5.5 0 0 1-.498.468H5.075a.5.5 0 0 1-.498-.468L4.118 4z"/>
               </svg>
@@ -257,7 +285,7 @@ function renderPagination() {
         </svg>
       </button>
     </div>
-    <div style="text-align: center; color: #64748b; font-size: 14px; padding-bottom: 20px;">
+    <div style="text-align: center; color: #64748b; font-size: 14px; padding-bottom: 20px; margin-top: 16px;">
       Hiển thị ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalCount)} trong tổng số ${totalCount} người dùng
     </div>
   `;
