@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quản lý chi nhánh - Hệ thống quản lý bán thuốc" />
+  <title>Quản lý chi nhánh - AdminPro</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/base.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <!-- ============================================ -->
+    <!-- HEADER -->
+    <!-- ============================================ -->
+    <div id="header"></div>
+
+    <!-- ============================================ -->
+    <!-- SIDEBAR OVERLAY (Mobile) -->
+    <!-- ============================================ -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ============================================ -->
+    <!-- MAIN LAYOUT -->
+    <!-- ============================================ -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div id="sidebar-container"></div>
+
+      <!-- ============================================ -->
+      <!-- CONTENT AREA -->
+      <!-- ============================================ -->
+      <main class="content-area">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">🏢 Quản lý chi nhánh</h1>
+          <p class="page-subtitle">Danh sách và quản lý các chi nhánh trong hệ thống</p>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TOOLBAR (Search + Add Button) -->
+        <!-- ============================================ -->
+        <div class="toolbar">
+          <div id="search-container"></div>
+
+          <button class="btn btn-primary" id="add-branch-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Thêm chi nhánh
+          </button>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TABLE CONTAINER -->
+        <!-- ============================================ -->
+        <div id="table-container"></div>
+      </main>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================ -->
+    <div id="footer"></div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- MODAL ROOT -->
+  <!-- ============================================ -->
+  <div id="modal-root"></div>
+
+  <!-- ============================================ -->
+  <!-- FORM TEMPLATE (Hidden) -->
+  <!-- ============================================ -->
+  <template id="branch-form-template">
+    <form id="branch-form" class="branch-form">
+      <!-- ========================================== -->
+      <!-- TÊN CHI NHÁNH -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="tenChiNhanh">
+          Tên chi nhánh <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-input"
+          id="tenChiNhanh"
+          name="tenChiNhanh"
+          placeholder="Ví dụ: Chi nhánh Quận 1, Chi nhánh Thủ Đức..."
+          required
+          minlength="3"
+          maxlength="100" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Tên chi nhánh phải có từ 3-100 ký tự
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- ĐỊA CHỈ -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="diaChi">
+          Địa chỉ <span class="required">*</span>
+        </label>
+        <textarea
+          class="form-input"
+          id="diaChi"
+          name="diaChi"
+          placeholder="Nhập địa chỉ đầy đủ: Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."
+          rows="3"
+          required
+          minlength="10"
+          maxlength="200"></textarea>
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Địa chỉ phải có từ 10-200 ký tự
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TRẠNG THÁI -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="trangThai">
+          Trạng thái <span class="required">*</span>
+        </label>
+        <select class="form-select" id="trangThai" name="trangThai" required>
+          <option value="true">✅ Hoạt động</option>
+          <option value="false">🚫 Ngừng hoạt động</option>
+        </select>
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Chi nhánh ngừng hoạt động sẽ không thể tạo đơn hàng mới
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- FORM ACTIONS -->
+      <!-- ========================================== -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-btn">
+          Hủy
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <span class="btn-text">💾 Lưu</span>
+          <span class="btn-loading" style="display: none">
+            <span class="loading-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+
+  <!-- ============================================ -->
+  <!-- JAVASCRIPT -->
+  <!-- ============================================ -->
+  <script type="module" src="../../js/pages/admin/chiNhanh.js"></script>
+</body>
+</html>
