@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quản lý khách hàng - Hệ thống quản lý bán thuốc" />
+  <title>Quản lý khách hàng - AdminPro</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/base.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <!-- ============================================ -->
+    <!-- HEADER -->
+    <!-- ============================================ -->
+    <div id="header"></div>
+
+    <!-- ============================================ -->
+    <!-- SIDEBAR OVERLAY (Mobile) -->
+    <!-- ============================================ -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ============================================ -->
+    <!-- MAIN LAYOUT -->
+    <!-- ============================================ -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div id="sidebar-container"></div>
+
+      <!-- ============================================ -->
+      <!-- CONTENT AREA -->
+      <!-- ============================================ -->
+      <main class="content-area">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">👥 Quản lý khách hàng</h1>
+          <p class="page-subtitle">Danh sách và quản lý thông tin khách hàng, điểm tích lũy</p>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TOOLBAR (Search + Add Button) -->
+        <!-- ============================================ -->
+        <div class="toolbar">
+          <div id="search-container"></div>
+
+          <button class="btn btn-primary" id="add-customer-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Thêm khách hàng
+          </button>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TABLE CONTAINER -->
+        <!-- ============================================ -->
+        <div id="table-container"></div>
+      </main>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================ -->
+    <div id="footer"></div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- MODAL ROOT -->
+  <!-- ============================================ -->
+  <div id="modal-root"></div>
+
+  <!-- ============================================ -->
+  <!-- FORM TEMPLATE (Hidden) -->
+  <!-- ============================================ -->
+  <template id="customer-form-template">
+    <form id="customer-form" class="customer-form">
+      <!-- ========================================== -->
+      <!-- TÊN KHÁCH HÀNG -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="tenKhachHang">
+          Tên khách hàng <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-input"
+          id="tenKhachHang"
+          name="tenKhachHang"
+          placeholder="Ví dụ: Nguyễn Văn A..."
+          required
+          minlength="2"
+          maxlength="100" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Tên khách hàng phải có từ 2-100 ký tự
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SỐ ĐIỆN THOẠI -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="sdt">
+          Số điện thoại <span class="required">*</span>
+        </label>
+        <input
+          type="tel"
+          class="form-input"
+          id="sdt"
+          name="sdt"
+          placeholder="Ví dụ: 0901234567"
+          required
+          pattern="[0-9]{10,11}"
+          maxlength="11" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          ⚠️ Số điện thoại phải có 10-11 chữ số và phải là duy nhất trong hệ thống
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- ĐIỂM TÍCH LŨY -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="diemTichLuy">
+          Điểm tích lũy
+        </label>
+        <input
+          type="number"
+          class="form-input"
+          id="diemTichLuy"
+          name="diemTichLuy"
+          placeholder="0"
+          min="0"
+          step="1"
+          value="0" />
+        <small class="form-note" style="color: #f59e0b; font-size: 12px; display: block; margin-top: 4px;">
+          ℹ️ Khi sửa khách hàng, trường này sẽ chỉ hiển thị (không thể sửa trực tiếp). Điểm sẽ tự động cập nhật khi khách hàng mua hàng.
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TRẠNG THÁI -->
+      <!-- ========================================== -->
+      <div class="form-group">
+        <label class="form-label" for="trangThai">
+          Trạng thái <span class="required">*</span>
+        </label>
+        <select class="form-select" id="trangThai" name="trangThai" required>
+          <option value="true">✅ Hoạt động</option>
+          <option value="false">🚫 Ngừng hoạt động</option>
+        </select>
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Khách hàng ngừng hoạt động sẽ không thể tạo đơn hàng mới
+        </small>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- FORM ACTIONS -->
+      <!-- ========================================== -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-btn">
+          Hủy
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <span class="btn-text">💾 Lưu</span>
+          <span class="btn-loading" style="display: none">
+            <span class="loading-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+
+  <!-- ============================================ -->
+  <!-- JAVASCRIPT -->
+  <!-- ============================================ -->
+  <script type="module" src="../../js/pages/admin/khachHang.js"></script>
+</body>
+</html>
