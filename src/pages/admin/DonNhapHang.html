@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quản lý đơn nhập hàng - Hệ thống quản lý bán thuốc" />
+  <title>Quản lý đơn nhập hàng - AdminPro</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/base.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  
+  <style>
+    /* Chi tiết lô hàng styles */
+    .batch-details-list {
+      margin-top: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .batch-detail-item {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 1fr 1fr auto;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      align-items: center;
+      background: #fafafa;
+    }
+
+    .batch-detail-item:last-child {
+      border-bottom: none;
+    }
+
+    .batch-detail-header {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .form-select-small, .form-input-small {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    .btn-remove {
+      padding: 6px 12px;
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-remove:hover {
+      background: #fecaca;
+    }
+
+    .order-summary {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 2px solid #e2e8f0;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .summary-label {
+      color: #64748b;
+    }
+
+    .summary-value {
+      color: #16a34a;
+      font-size: 20px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .validation-note {
+      margin-top: 8px;
+      padding: 12px;
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #92400e;
+    }
+
+    @media (max-width: 1024px) {
+      .batch-detail-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <div id="header"></div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="main-layout">
+      <div id="sidebar-container"></div>
+
+      <main class="content-area">
+        <div class="page-header">
+          <h1 class="page-title">📦 Quản lý đơn nhập hàng</h1>
+          <p class="page-subtitle">Tạo và quản lý đơn nhập hàng từ nhà cung cấp</p>
+        </div>
+
+        <div class="toolbar">
+          <div id="search-container"></div>
+
+          <button class="btn btn-primary" id="add-import-order-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Tạo đơn nhập hàng
+          </button>
+        </div>
+
+        <div id="table-container"></div>
+      </main>
+    </div>
+
+    <div id="footer"></div>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <!-- FORM TEMPLATE -->
+  <template id="import-order-form-template">
+    <form id="import-order-form" class="import-order-form">
+      <!-- Grid 2 cột cho thông tin chung -->
+      <div class="detail-grid">
+        <!-- CHI NHÁNH -->
+        <div class="form-group">
+          <label class="form-label" for="idchiNhanh">
+            Chi nhánh <span class="required">*</span>
+          </label>
+          <select class="form-select" id="idchiNhanh" name="idchiNhanh" required>
+            <option value="">-- Chọn chi nhánh --</option>
+          </select>
+          <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+            Chi nhánh sẽ nhận hàng từ nhà cung cấp
+          </small>
+        </div>
+
+        <!-- NHÀ CUNG CẤP -->
+        <div class="form-group">
+          <label class="form-label" for="idnhaCungCap">
+            Nhà cung cấp <span class="required">*</span>
+          </label>
+          <select class="form-select" id="idnhaCungCap" name="idnhaCungCap" required>
+            <option value="">-- Chọn nhà cung cấp --</option>
+          </select>
+          <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+            Nhà cung cấp cung cấp hàng cho đơn này
+          </small>
+        </div>
+      </div>
+
+      <!-- SỐ ĐƠN NHẬP & NGÀY NHẬP -->
+      <div class="detail-grid">
+        <div class="form-group">
+          <label class="form-label" for="soDonNhap">
+            Số đơn nhập <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            class="form-input"
+            id="soDonNhap"
+            name="soDonNhap"
+            placeholder="Ví dụ: DNH-2024-001"
+            required
+            minlength="3"
+            maxlength="50" />
+          <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+            Mã số đơn nhập duy nhất (3-50 ký tự)
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ngayNhap">
+            Ngày nhập <span class="required">*</span>
+          </label>
+          <input
+            type="date"
+            class="form-input"
+            id="ngayNhap"
+            name="ngayNhap"
+            required
+            max="9999-12-31" />
+          <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+            Ngày nhận hàng từ nhà cung cấp
+          </small>
+        </div>
+      </div>
+
+      <!-- CHI TIẾT LÔ HÀNG -->
+      <div class="form-group">
+        <label class="form-label">
+          Chi tiết lô hàng <span class="required">*</span>
+        </label>
+        
+        <div class="validation-note">
+          <strong>⚠️ Lưu ý quan trọng:</strong>
+          <ul style="margin: 8px 0 0 20px;">
+            <li>Ngày hết hạn phải sau ngày sản xuất</li>
+            <li>Số lô phải duy nhất cho mỗi thuốc</li>
+            <li>Giá nhập phải lớn hơn 0</li>
+            <li>Kho hàng sẽ tự động được cập nhật sau khi tạo đơn</li>
+          </ul>
+        </div>
+        
+        <div id="batch-details-container">
+          <div class="batch-details-list">
+            <div class="batch-detail-item batch-detail-header">
+              <div>Thuốc</div>
+              <div>Số lô</div>
+              <div>Ngày SX</div>
+              <div>Ngày HSD</div>
+              <div>Số lượng</div>
+              <div>Giá nhập (VNĐ)</div>
+              <div>Thành tiền</div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary" id="add-detail-btn" style="margin-top: 12px;">
+          ➕ Thêm lô hàng
+        </button>
+      </div>
+
+      <!-- TỔNG KẾT -->
+      <div class="order-summary">
+        <div class="summary-row">
+          <span class="summary-label">Tổng tiền đơn nhập:</span>
+          <span class="summary-value" id="summary-total">0 ₫</span>
+        </div>
+        <div style="margin-top: 12px; font-size: 13px; color: #64748b;">
+          <strong>💡 Thông tin:</strong> Hệ thống sẽ tự động cập nhật kho hàng và tạo lô hàng mới sau khi đơn nhập được tạo thành công.
+        </div>
+      </div>
+
+      <!-- FORM ACTIONS -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-btn">
+          Hủy
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <span class="btn-text">💾 Tạo đơn nhập hàng</span>
+          <span class="btn-loading" style="display: none">
+            <span class="loading-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+
+  <script type="module" src="../../js/pages/admin/donNhapHang.js"></script>
+</body>
+</html>
