@@ -13,7 +13,7 @@ import { requireAuth } from '../../api/authApi.js';
 import { getAllDonHangs, createDonHang, deleteDonHang, getDonHangById } from '../../api/donHangApi.js';
 import { getAllKhachHangs } from '../../api/khachHangApi.js';
 import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
-import { getAllPhuongThucThanhToans } from '../api/phuongThucThanhToanApi.js';
+import { getAllPhuongThucThanhToans } from '../../api/PhuongThucThanhToanApi.js';
 import { getAllThuoc } from '../../api/thuocApi.js';
 
 requireAuth();
@@ -42,12 +42,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
 });
 
-// Store component instances globally for re-rendering
-let header, sidebar, footer, searchBox;
-
 function initializeLayout() {
-  // Initialize header
-  header = new Header({ 
+  const header = new Header({ 
     appTitle: 'Quản lý bán thuốc', 
     logoText: 'QT', 
     onMenuToggle: toggleMobileSidebar 
@@ -58,23 +54,20 @@ function initializeLayout() {
     header.attachEventListeners();
   }
 
-  // Initialize sidebar
-  sidebar = new Sidebar({ activeItem: 'donhang' });
+  const sidebar = new Sidebar({ activeItem: 'donhang' });
   const sidebarEl = document.getElementById('sidebar-container');
   if (sidebarEl) {
     sidebarEl.innerHTML = sidebar.render();
     sidebar.attachEventListeners();
   }
 
-  // Initialize footer
-  footer = new Footer({ copyrightText: '© 2024 Quản lý bán thuốc.' });
+  const footer = new Footer({ copyrightText: '© 2024 Quản lý bán thuốc.' });
   const footerEl = document.getElementById('footer');
   if (footerEl) {
     footerEl.innerHTML = footer.render();
   }
 
-  // Initialize search box
-  searchBox = new SearchBox({
+  const searchBox = new SearchBox({
     containerId: 'search-container',
     placeholder: 'Tìm kiếm đơn hàng...',
     onSearch: handleSearch
@@ -84,13 +77,6 @@ function initializeLayout() {
     searchEl.innerHTML = searchBox.render();
     searchBox.attachEventListeners();
   }
-
-  // Force initial render
-  setTimeout(() => {
-    document.getElementById('header')?.innerHTML = header.render();
-    document.getElementById('sidebar-container')?.innerHTML = sidebar.render();
-    document.getElementById('footer')?.innerHTML = footer.render();
-  }, 0);
 }
 
 async function loadOrders() {
@@ -184,7 +170,6 @@ async function handleSearch(query) {
 async function openAddOrderModal() {
   orderDetails = [];
   
-  // Load dropdown data
   await Promise.all([
     loadCustomers(),
     loadBranches(),
@@ -206,7 +191,7 @@ async function openAddOrderModal() {
   
   populateDropdowns();
   setupFormEventListeners();
-  addOrderDetail(); // Thêm 1 dòng mặc định
+  addOrderDetail();
 }
 
 async function loadCustomers() {
@@ -230,7 +215,6 @@ async function loadMedicines() {
 }
 
 function populateDropdowns() {
-  // Khách hàng
   const customerSelect = document.getElementById('idkhachHang');
   customers.forEach(c => {
     const option = document.createElement('option');
@@ -242,7 +226,6 @@ function populateDropdowns() {
 
   customerSelect.addEventListener('change', handleCustomerChange);
 
-  // Chi nhánh
   const branchSelect = document.getElementById('idchiNhanh');
   branches.forEach(b => {
     const option = document.createElement('option');
@@ -251,7 +234,6 @@ function populateDropdowns() {
     branchSelect.appendChild(option);
   });
 
-  // Phương thức thanh toán
   const paymentSelect = document.getElementById('idphuongThucTt');
   paymentMethods.forEach(p => {
     const option = document.createElement('option');
@@ -306,7 +288,6 @@ function addOrderDetail() {
   
   container.insertAdjacentHTML('beforeend', itemHTML);
   
-  // Event listeners
   const medicineSelect = container.querySelector(`select[data-detail-id="${detailId}"]`);
   const quantityInput = container.querySelector(`input.detail-quantity[data-detail-id="${detailId}"]`);
   
@@ -349,7 +330,6 @@ window.removeOrderDetail = function(detailId) {
 function calculateOrderSummary() {
   const tongTien = orderDetails.reduce((sum, d) => sum + d.thanhTien, 0);
   
-  // Lấy điểm khách hàng
   const customerSelect = document.getElementById('idkhachHang');
   const selectedOption = customerSelect?.selectedOptions[0];
   const customerPoints = parseInt(selectedOption?.dataset?.points || 0);
@@ -546,11 +526,6 @@ function toggleMobileSidebar() {
 function setupEventListeners() {
   document.getElementById('add-order-btn')?.addEventListener('click', openAddOrderModal);
   document.getElementById('sidebar-overlay')?.addEventListener('click', toggleMobileSidebar);
-
-  // Force re-render components to ensure they're displayed
-  document.getElementById('header')?.innerHTML = header.render();
-  document.getElementById('sidebar-container')?.innerHTML = sidebar.render();
-  document.getElementById('footer')?.innerHTML = footer.render();
 }
 
 function showLoading(show) {
@@ -568,6 +543,13 @@ function formatCurrency(value) {
 
 function formatDate(date) {
   if (!date) return '-';
-  const d = new Date(date.year, date.month - 1, date.day);
-  return d.toLocaleDateString('vi-VN');
+  if (typeof date === 'string') {
+    const d = new Date(date);
+    return d.toLocaleDateString('vi-VN');
+  }
+  if (date.year && date.month && date.day) {
+    const d = new Date(date.year, date.month - 1, date.day);
+    return d.toLocaleDateString('vi-VN');
+  }
+  return '-';
 }

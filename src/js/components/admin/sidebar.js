@@ -15,15 +15,15 @@ export class Sidebar {
 
   getDefaultMenuItems() {
     return [
-      {
-        id: 'dashboard',
-        label: 'Dashboard',
-        icon: this.getIcon('dashboard'),
-        href: '/src/pages/admin/index.html'
-      },
+      // {
+      //   id: 'dashboard',
+      //   label: 'Dashboard',
+      //   icon: this.getIcon('dashboard'),
+      //   href: '/src/pages/admin/index.html'
+      // },
       {
         id: 'baoCao',
-        label: 'Báo cáo',
+        label: 'Dashboard',
         icon: this.getIcon('report'),
         href: '/src/pages/admin/baoCao.html'
       },

@@ -12,7 +12,7 @@ import { SearchBox } from '../../components/admin/searchBox.js';
 import { requireAuth } from '../../api/authApi.js';
 import { getAllDonNhapHangs, createDonNhapHang, getDonNhapHangById, getAllThuocs } from '../../api/donNhapHangApi.js';
 import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
-import { getAllNhaCungCaps } from '../api/nhaCungCapApi.js';
+import { getAllNhaCungCaps } from '../../api/nhaCungCapApi.js';
 
 requireAuth();
 
@@ -33,12 +33,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
 });
 
-// Store component instances globally for re-rendering
-let header, sidebar, footer, searchBox;
-
 function initializeLayout() {
   // Initialize header
-  header = new Header({ 
+  const header = new Header({ 
     appTitle: 'Quản lý bán thuốc', 
     logoText: 'QT', 
     onMenuToggle: toggleMobileSidebar 
@@ -50,7 +47,7 @@ function initializeLayout() {
   }
 
   // Initialize sidebar
-  sidebar = new Sidebar({ activeItem: 'donnhaphang' });
+  const sidebar = new Sidebar({ activeItem: 'donnhaphang' });
   const sidebarEl = document.getElementById('sidebar-container');
   if (sidebarEl) {
     sidebarEl.innerHTML = sidebar.render();
@@ -58,14 +55,14 @@ function initializeLayout() {
   }
 
   // Initialize footer
-  footer = new Footer({ copyrightText: '© 2024 Quản lý bán thuốc.' });
+  const footer = new Footer({ copyrightText: '© 2024 Quản lý bán thuốc.' });
   const footerEl = document.getElementById('footer');
   if (footerEl) {
     footerEl.innerHTML = footer.render();
   }
 
   // Initialize search box
-  searchBox = new SearchBox({
+  const searchBox = new SearchBox({
     containerId: 'search-container',
     placeholder: 'Tìm kiếm đơn nhập hàng...',
     onSearch: handleSearch
@@ -75,13 +72,6 @@ function initializeLayout() {
     searchEl.innerHTML = searchBox.render();
     searchBox.attachEventListeners();
   }
-
-  // Force initial render
-  setTimeout(() => {
-    document.getElementById('header')?.innerHTML = header.render();
-    document.getElementById('sidebar-container')?.innerHTML = sidebar.render();
-    document.getElementById('footer')?.innerHTML = footer.render();
-  }, 0);
 }
 
 async function loadImportOrders() {
@@ -209,20 +199,24 @@ async function loadMedicines() {
 
 function populateDropdowns() {
   const branchSelect = document.getElementById('idchiNhanh');
-  branches.forEach(b => {
-    const option = document.createElement('option');
-    option.value = b.id;
-    option.textContent = b.tenChiNhanh;
-    branchSelect.appendChild(option);
-  });
+  if (branchSelect) {
+    branches.forEach(b => {
+      const option = document.createElement('option');
+      option.value = b.id;
+      option.textContent = b.tenChiNhanh;
+      branchSelect.appendChild(option);
+    });
+  }
 
   const supplierSelect = document.getElementById('idnhaCungCap');
-  suppliers.forEach(s => {
-    const option = document.createElement('option');
-    option.value = s.id;
-    option.textContent = s.tenNhaCungCap;
-    supplierSelect.appendChild(option);
-  });
+  if (supplierSelect) {
+    suppliers.forEach(s => {
+      const option = document.createElement('option');
+      option.value = s.id;
+      option.textContent = s.tenNhaCungCap;
+      supplierSelect.appendChild(option);
+    });
+  }
 }
 
 function addBatchDetail() {
@@ -241,6 +235,8 @@ function addBatchDetail() {
   batchDetails.push(detail);
   
   const container = document.querySelector('.batch-details-list');
+  if (!container) return;
+  
   const itemHTML = `
     <div class="batch-detail-item" data-detail-id="${detailId}">
       <select class="form-select-small detail-medicine" data-detail-id="${detailId}" required>
@@ -260,22 +256,28 @@ function addBatchDetail() {
   container.insertAdjacentHTML('beforeend', itemHTML);
   
   const medicineSelect = container.querySelector(`select[data-detail-id="${detailId}"]`);
+  const soLoInput = container.querySelector(`input.detail-solo[data-detail-id="${detailId}"]`);
   const quantityInput = container.querySelector(`input.detail-quantity[data-detail-id="${detailId}"]`);
   const priceInput = container.querySelector(`input.detail-price[data-detail-id="${detailId}"]`);
   const mfgInput = container.querySelector(`input.detail-mfg[data-detail-id="${detailId}"]`);
   const expInput = container.querySelector(`input.detail-exp[data-detail-id="${detailId}"]`);
   
-  medicineSelect.addEventListener('change', () => handleDetailChange(detailId));
-  quantityInput.addEventListener('input', () => handleDetailChange(detailId));
-  priceInput.addEventListener('input', () => handleDetailChange(detailId));
-  mfgInput.addEventListener('change', () => validateDates(detailId));
-  expInput.addEventListener('change', () => validateDates(detailId));
+  if (medicineSelect) medicineSelect.addEventListener('change', () => handleDetailChange(detailId));
+  if (soLoInput) soLoInput.addEventListener('input', () => handleDetailChange(detailId));
+  if (quantityInput) quantityInput.addEventListener('input', () => handleDetailChange(detailId));
+  if (priceInput) priceInput.addEventListener('input', () => handleDetailChange(detailId));
+  if (mfgInput) mfgInput.addEventListener('change', () => validateDates(detailId));
+  if (expInput) expInput.addEventListener('change', () => validateDates(detailId));
 }
 
 function validateDates(detailId) {
   const container = document.querySelector(`[data-detail-id="${detailId}"]`);
+  if (!container) return;
+  
   const mfgInput = container.querySelector('.detail-mfg');
   const expInput = container.querySelector('.detail-exp');
+  
+  if (!mfgInput || !expInput) return;
   
   const mfg = new Date(mfgInput.value);
   const exp = new Date(expInput.value);
@@ -293,6 +295,8 @@ function handleDetailChange(detailId) {
   if (!detail) return;
   
   const container = document.querySelector(`[data-detail-id="${detailId}"]`);
+  if (!container) return;
+  
   const medicineSelect = container.querySelector('.detail-medicine');
   const soLoInput = container.querySelector('.detail-solo');
   const mfgInput = container.querySelector('.detail-mfg');
@@ -301,32 +305,40 @@ function handleDetailChange(detailId) {
   const priceInput = container.querySelector('.detail-price');
   const totalInput = container.querySelector('.detail-total');
   
-  const price = parseFloat(priceInput.value) || 0;
-  const quantity = parseInt(quantityInput.value) || 0;
+  const price = parseFloat(priceInput?.value) || 0;
+  const quantity = parseInt(quantityInput?.value) || 0;
   const total = price * quantity;
   
-  detail.idthuoc = parseInt(medicineSelect.value) || null;
-  detail.soLo = soLoInput.value;
-  detail.ngaySanXuat = mfgInput.value;
-  detail.ngayHetHan = expInput.value;
+  detail.idthuoc = parseInt(medicineSelect?.value) || null;
+  detail.soLo = soLoInput?.value || '';
+  detail.ngaySanXuat = mfgInput?.value || '';
+  detail.ngayHetHan = expInput?.value || '';
   detail.soLuong = quantity;
   detail.giaNhap = price;
   detail.thanhTien = total;
   
-  totalInput.value = formatCurrency(total);
+  if (totalInput) {
+    totalInput.value = formatCurrency(total);
+  }
   
   calculateOrderSummary();
 }
 
 window.removeBatchDetail = function(detailId) {
   batchDetails = batchDetails.filter(d => d.id !== detailId);
-  document.querySelector(`[data-detail-id="${detailId}"]`).remove();
+  const element = document.querySelector(`[data-detail-id="${detailId}"]`);
+  if (element) {
+    element.remove();
+  }
   calculateOrderSummary();
 };
 
 function calculateOrderSummary() {
   const tongTien = batchDetails.reduce((sum, d) => sum + d.thanhTien, 0);
-  document.getElementById('summary-total').textContent = formatCurrency(tongTien);
+  const summaryTotal = document.getElementById('summary-total');
+  if (summaryTotal) {
+    summaryTotal.textContent = formatCurrency(tongTien);
+  }
 }
 
 function setupFormEventListeners() {
@@ -334,9 +346,9 @@ function setupFormEventListeners() {
   const addDetailBtn = document.getElementById('add-detail-btn');
   const cancelBtn = document.getElementById('cancel-btn');
   
-  form.addEventListener('submit', handleFormSubmit);
-  addDetailBtn.addEventListener('click', addBatchDetail);
-  cancelBtn.addEventListener('click', closeModal);
+  if (form) form.addEventListener('submit', handleFormSubmit);
+  if (addDetailBtn) addDetailBtn.addEventListener('click', addBatchDetail);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 }
 
 async function handleFormSubmit(e) {
@@ -462,14 +474,14 @@ function setFormLoading(isLoading) {
   const inputs = document.querySelectorAll('#import-order-form input, #import-order-form select, #import-order-form button');
 
   if (isLoading) {
-    submitBtn.disabled = true;
-    btnText.style.display = 'none';
-    btnLoading.style.display = 'inline-flex';
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.style.display = 'none';
+    if (btnLoading) btnLoading.style.display = 'inline-flex';
     inputs.forEach(input => input.disabled = true);
   } else {
-    submitBtn.disabled = false;
-    btnText.style.display = 'inline';
-    btnLoading.style.display = 'none';
+    if (submitBtn) submitBtn.disabled = false;
+    if (btnText) btnText.style.display = 'inline';
+    if (btnLoading) btnLoading.style.display = 'none';
     inputs.forEach(input => input.disabled = false);
   }
 }
@@ -488,13 +500,11 @@ function toggleMobileSidebar() {
 }
 
 function setupEventListeners() {
-  document.getElementById('add-import-order-btn')?.addEventListener('click', openAddImportOrderModal);
-  document.getElementById('sidebar-overlay')?.addEventListener('click', toggleMobileSidebar);
-
-  // Force re-render components to ensure they're displayed
-  document.getElementById('header')?.innerHTML = header.render();
-  document.getElementById('sidebar-container')?.innerHTML = sidebar.render();
-  document.getElementById('footer')?.innerHTML = footer.render();
+  const addBtn = document.getElementById('add-import-order-btn');
+  const overlay = document.getElementById('sidebar-overlay');
+  
+  if (addBtn) addBtn.addEventListener('click', openAddImportOrderModal);
+  if (overlay) overlay.addEventListener('click', toggleMobileSidebar);
 }
 
 function showLoading(show) {
@@ -502,7 +512,7 @@ function showLoading(show) {
   if (el) el.style.opacity = show ? '0.5' : '1';
 }
 
-function showNotification(msg) {
+function showNotification(msg, type) {
   alert(msg);
 }
 
