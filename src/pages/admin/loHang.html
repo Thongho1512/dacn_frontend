@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quản lý lô hàng - Hệ thống quản lý bán thuốc" />
+  <title>Quản lý lô hàng - AdminPro</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/base.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/khoHang.css" />
+  
+  <style>
+    /* Expiry badge styles */
+    .expiry-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .expiry-badge--expired {
+      background: #fee2e2;
+      color: #991b1b;
+      animation: pulse-red 2s ease-in-out infinite;
+    }
+
+    .expiry-badge--expiring {
+      background: #fef3c7;
+      color: #92400e;
+      animation: pulse-orange 2s ease-in-out infinite;
+    }
+
+    .expiry-badge--ok {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    @keyframes pulse-orange {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+      }
+    }
+
+    .days-remaining {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+      display: block;
+    }
+
+    .batch-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .info-card {
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .info-card-label {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .info-card-value {
+      font-size: 16px;
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    .date-validation-note {
+      margin-top: 8px;
+      padding: 12px;
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #92400e;
+    }
+
+    @media (max-width: 768px) {
+      .batch-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <!-- HEADER -->
+    <div id="header"></div>
+
+    <!-- SIDEBAR OVERLAY (Mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div id="sidebar-container"></div>
+
+      <!-- CONTENT AREA -->
+      <main class="content-area">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">📦 Quản lý lô hàng</h1>
+          <p class="page-subtitle">Theo dõi lô hàng và cảnh báo hạn sử dụng</p>
+        </div>
+
+        <!-- STATISTICS CARDS -->
+        <div id="stats-container" class="stats-container"></div>
+
+        <!-- ALERT BANNER -->
+        <div id="alert-banner-container"></div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label class="filter-label" for="filter-chi-nhanh">🏢 Chi nhánh</label>
+            <select class="filter-select" id="filter-chi-nhanh">
+              <option value="">Tất cả chi nhánh</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label class="filter-label" for="filter-thuoc">💊 Thuốc</label>
+            <select class="filter-select" id="filter-thuoc">
+              <option value="">Tất cả thuốc</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label class="filter-label" for="filter-han-su-dung">📅 Hạn sử dụng</label>
+            <select class="filter-select" id="filter-han-su-dung">
+              <option value="">Tất cả</option>
+              <option value="expired">🚫 Đã hết hạn</option>
+              <option value="expiring">⏰ Sắp hết hạn (30 ngày)</option>
+              <option value="ok">✅ Còn hạn dài</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label class="filter-label" for="filter-days">📆 Số ngày cảnh báo</label>
+            <input 
+              type="number" 
+              class="filter-select" 
+              id="filter-days" 
+              placeholder="30" 
+              min="1" 
+              max="365" 
+              value="30"
+              style="padding: 8px 12px;" />
+          </div>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+          <div id="search-container"></div>
+
+          <button class="btn btn-secondary" id="refresh-btn" title="Làm mới dữ liệu">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+              <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+            </svg>
+            Làm mới
+          </button>
+        </div>
+
+        <!-- TABLE CONTAINER -->
+        <div id="table-container"></div>
+      </main>
+    </div>
+
+    <!-- FOOTER -->
+    <div id="footer"></div>
+  </div>
+
+  <!-- MODAL ROOT -->
+  <div id="modal-root"></div>
+
+  <!-- UPDATE FORM TEMPLATE -->
+  <template id="batch-update-form-template">
+    <form id="batch-update-form" class="batch-update-form">
+      <!-- BATCH INFO GRID -->
+      <div class="batch-info-grid">
+        <div class="info-card">
+          <div class="info-card-label">💊 Thuốc</div>
+          <div class="info-card-value" id="detail-thuoc">-</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">🏢 Chi nhánh</div>
+          <div class="info-card-value" id="detail-chi-nhanh">-</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">📋 Số đơn nhập</div>
+          <div class="info-card-value" id="detail-so-don-nhap">-</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">📊 Số lượng tồn kho</div>
+          <div class="info-card-value" id="detail-ton-kho">-</div>
+        </div>
+      </div>
+
+      <!-- SỐ LÔ -->
+      <div class="form-group">
+        <label class="form-label" for="soLo">
+          🔢 Số lô <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-input"
+          id="soLo"
+          name="soLo"
+          placeholder="Ví dụ: LOT2024001"
+          required
+          minlength="3"
+          maxlength="50" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Số lô duy nhất để định danh lô hàng (3-50 ký tự)
+        </small>
+      </div>
+
+      <!-- NGÀY SẢN XUẤT -->
+      <div class="form-group">
+        <label class="form-label" for="ngaySanXuat">
+          📅 Ngày sản xuất <span class="required">*</span>
+        </label>
+        <input
+          type="date"
+          class="form-input"
+          id="ngaySanXuat"
+          name="ngaySanXuat"
+          required
+          max="9999-12-31" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Ngày sản xuất phải trước ngày hết hạn
+        </small>
+      </div>
+
+      <!-- NGÀY HẾT HẠN -->
+      <div class="form-group">
+        <label class="form-label" for="ngayHetHan">
+          ⏰ Ngày hết hạn <span class="required">*</span>
+        </label>
+        <input
+          type="date"
+          class="form-input"
+          id="ngayHetHan"
+          name="ngayHetHan"
+          required
+          max="9999-12-31" />
+        <div class="date-validation-note" id="date-validation" style="display: none;">
+          <strong>⚠️ Cảnh báo:</strong> <span id="date-validation-message"></span>
+        </div>
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Ngày hết hạn phải sau ngày sản xuất
+        </small>
+      </div>
+
+      <!-- SỐ LƯỢNG -->
+      <div class="form-group">
+        <label class="form-label" for="soLuong">
+          📦 Số lượng <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          class="form-input"
+          id="soLuong"
+          name="soLuong"
+          placeholder="Ví dụ: 1000"
+          required
+          min="1"
+          max="1000000"
+          step="1" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          <strong>Lưu ý:</strong> Thay đổi số lượng có thể ảnh hưởng đến tồn kho
+        </small>
+      </div>
+
+      <!-- GIÁ NHẬP -->
+      <div class="form-group">
+        <label class="form-label" for="giaNhap">
+          💰 Giá nhập (VNĐ) <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          class="form-input"
+          id="giaNhap"
+          name="giaNhap"
+          placeholder="Ví dụ: 50000"
+          required
+          min="0"
+          max="100000000"
+          step="1000" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Giá nhập từ nhà cung cấp (đơn vị: VNĐ)
+        </small>
+      </div>
+
+      <!-- WARNING BOX -->
+      <div style="padding: 16px; background: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 12px; align-items: start;">
+          <span style="font-size: 24px;">🚨</span>
+          <div>
+            <strong style="color: #991b1b; display: block; margin-bottom: 8px;">
+              Cảnh báo quan trọng
+            </strong>
+            <ul style="color: #991b1b; font-size: 13px; margin-left: 20px;">
+              <li>Chỉ cập nhật khi thực sự cần thiết (điều chỉnh sai sót)</li>
+              <li>Thay đổi số lượng có thể ảnh hưởng đến tồn kho</li>
+              <li>Ngày hết hạn phải luôn sau ngày sản xuất</li>
+              <li>Giá nhập không thể âm</li>
+              <li>Mọi thay đổi sẽ được ghi lại trong lịch sử</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM ACTIONS -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-btn">
+          Hủy
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <span class="btn-text">💾 Cập nhật lô hàng</span>
+          <span class="btn-loading" style="display: none">
+            <span class="loading-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+
+  <!-- JAVASCRIPT -->
+  <script type="module" src="../../js/pages/admin/loHang.js"></script>
+</body>
+</html>
