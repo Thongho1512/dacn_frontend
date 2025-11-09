@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quản lý kho hàng - Hệ thống quản lý bán thuốc" />
+  <title>Quản lý kho hàng - AdminPro</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/base.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/khoHang.css" />
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <!-- HEADER -->
+    <div id="header"></div>
+
+    <!-- SIDEBAR OVERLAY (Mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div id="sidebar-container"></div>
+
+      <!-- CONTENT AREA -->
+      <main class="content-area">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">📦 Quản lý kho hàng</h1>
+          <p class="page-subtitle">Theo dõi tồn kho và cảnh báo hàng hóa</p>
+        </div>
+
+        <!-- STATISTICS CARDS -->
+        <div id="stats-container" class="stats-container"></div>
+
+        <!-- ALERT BANNER -->
+        <div id="alert-banner-container"></div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label class="filter-label" for="filter-chi-nhanh">🏢 Chi nhánh</label>
+            <select class="filter-select" id="filter-chi-nhanh">
+              <option value="">Tất cả chi nhánh</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label class="filter-label" for="filter-ton-kho">📊 Trạng thái tồn kho</label>
+            <select class="filter-select" id="filter-ton-kho">
+              <option value="">Tất cả</option>
+              <option value="low">⚠️ Tồn kho thấp</option>
+              <option value="normal">✅ Bình thường</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label class="filter-label" for="filter-han-su-dung">📅 Hạn sử dụng</label>
+            <select class="filter-select" id="filter-han-su-dung">
+              <option value="">Tất cả</option>
+              <option value="expired">🚫 Đã hết hạn</option>
+              <option value="expiring">⏰ Sắp hết hạn (30 ngày)</option>
+              <option value="ok">✅ Còn hạn</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+          <div id="search-container"></div>
+
+          <button class="btn btn-secondary" id="refresh-btn" title="Làm mới dữ liệu">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+              <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+            </svg>
+            Làm mới
+          </button>
+        </div>
+
+        <!-- TABLE CONTAINER -->
+        <div id="table-container"></div>
+      </main>
+    </div>
+
+    <!-- FOOTER -->
+    <div id="footer"></div>
+  </div>
+
+  <!-- MODAL ROOT -->
+  <div id="modal-root"></div>
+
+  <!-- UPDATE FORM TEMPLATE -->
+  <template id="stock-update-form-template">
+    <form id="stock-update-form" class="stock-update-form">
+      <!-- STOCK DETAIL INFO -->
+      <div class="stock-detail-info">
+        <div class="info-item">
+          <span class="info-label">🏢 Chi nhánh</span>
+          <span class="info-value" id="detail-chi-nhanh">-</span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">💊 Thuốc</span>
+          <span class="info-value" id="detail-thuoc">-</span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">🔢 Số lô</span>
+          <span class="info-value" id="detail-so-lo">-</span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">📅 Ngày hết hạn</span>
+          <span class="info-value" id="detail-han-su-dung">-</span>
+        </div>
+      </div>
+
+      <!-- TỒN KHO TỐI THIỂU -->
+      <div class="form-group">
+        <label class="form-label" for="tonKhoToiThieu">
+          📊 Tồn kho tối thiểu <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          class="form-input"
+          id="tonKhoToiThieu"
+          name="tonKhoToiThieu"
+          placeholder="Ví dụ: 10"
+          required
+          min="0"
+          max="10000"
+          step="1" />
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          Hệ thống sẽ cảnh báo khi số lượng tồn xuống dưới mức này
+        </small>
+      </div>
+
+      <!-- SỐ LƯỢNG TỒN -->
+      <div class="form-group">
+        <label class="form-label" for="soLuongTon">
+          📦 Số lượng tồn hiện tại <span class="required">*</span>
+        </label>
+        <div class="quantity-input-wrapper">
+          <input
+            type="number"
+            class="form-input"
+            id="soLuongTon"
+            name="soLuongTon"
+            placeholder="Ví dụ: 100"
+            required
+            min="0"
+            max="100000"
+            step="1" />
+          <div class="quantity-warning" id="quantity-warning">
+            <strong>⚠️ Cảnh báo:</strong> Việc thay đổi số lượng tồn trực tiếp có thể gây mất cân đối dữ liệu. 
+            Nên thay đổi thông qua đơn nhập hàng hoặc đơn bán hàng.
+          </div>
+        </div>
+        <small class="form-note" style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+          <strong>Lưu ý:</strong> Chỉ điều chỉnh khi thực hiện kiểm kê hoặc điều chỉnh kho
+        </small>
+      </div>
+
+      <!-- WARNING BOX -->
+      <div style="padding: 16px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 12px; align-items: start;">
+          <span style="font-size: 24px;">⚠️</span>
+          <div>
+            <strong style="color: #92400e; display: block; margin-bottom: 8px;">
+              Cảnh báo quan trọng
+            </strong>
+            <ul style="color: #92400e; font-size: 13px; margin-left: 20px;">
+              <li>Việc sửa số lượng tồn trực tiếp sẽ KHÔNG tạo lịch sử giao dịch</li>
+              <li>Chỉ sử dụng khi thực hiện kiểm kê kho hoặc điều chỉnh sai sót</li>
+              <li>Nên sử dụng chức năng "Đơn nhập hàng" để tăng tồn kho</li>
+              <li>Ngày cập nhật sẽ được ghi lại tự động</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM ACTIONS -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-btn">
+          Hủy
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <span class="btn-text">💾 Cập nhật kho hàng</span>
+          <span class="btn-loading" style="display: none">
+            <span class="loading-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+
+  <!-- JAVASCRIPT -->
+  <script type="module" src="../../js/pages/admin/khoHang.js"></script>
+</body>
+</html>
