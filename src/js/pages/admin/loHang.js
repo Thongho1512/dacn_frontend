@@ -72,39 +72,7 @@ function initializeLayout() {
 
   // Sidebar
   const sidebar = new Sidebar({
-    activeItem: 'lohang',
-    menuItems: [
-      {
-        id: 'dashboard',
-        label: 'Trang chủ',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6zM14 9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-2z"/></svg>`,
-        href: '/src/pages/admin/index.html'
-      },
-      {
-        id: 'thuoc',
-        label: 'Thuốc',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></svg>`,
-        href: '/src/pages/admin/thuoc.html'
-      },
-      {
-        id: 'khohang',
-        label: 'Kho hàng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4zm8 2h3v3h-3V5zM5 5h3v3H5V5zm0 5h3v3H5v-3zm7 0h3v3h-3v-3z"/></svg>`,
-        href: '/src/pages/admin/khoHang.html'
-      },
-      {
-        id: 'lohang',
-        label: 'Lô hàng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3z"/><path d="M6 7h8v1H6V7zm0 3h8v1H6v-1z"/></svg>`,
-        href: '/src/pages/admin/loHang.html'
-      },
-      {
-        id: 'donnhaphang',
-        label: 'Đơn nhập hàng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3zm1 2h12v10H4V5z"/></svg>`,
-        href: '/src/pages/admin/donNhapHang.html'
-      }
-    ]
+    activeItem: 'lohang'
   });
 
   const sidebarContainer = document.getElementById('sidebar-container');

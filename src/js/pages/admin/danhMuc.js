@@ -30,14 +30,7 @@ function initializeLayout() {
   header.attachEventListeners();
 
   const sidebar = new Sidebar({
-    activeItem: 'danhmuc',
-    menuItems: [
-      { id: 'dashboard', label: 'Trang chủ', href: '/src/pages/admin/index.html' },
-      { id: 'users', label: 'Người dùng', href: '/src/pages/admin/nguoiDung.html' },
-      { id: 'vaitro', label: 'Vai trò', href: '/src/pages/admin/vaiTro.html' },
-      { id: 'danhmuc', label: 'Danh mục', href: '/src/pages/admin/danhMuc.html' },
-      { id: 'thuoc', label: 'Thuốc', href: '/src/pages/admin/thuoc.html' }
-    ]
+    activeItem: 'danhMuc'
   });
   document.getElementById('sidebar-container').innerHTML = sidebar.render();
   sidebar.attachEventListeners();

@@ -57,47 +57,7 @@ function initializeLayout() {
   }
 
   // Sidebar
-  const sidebar = new Sidebar({
-    activeItem: 'khachhang',
-    menuItems: [
-      {
-        id: 'dashboard',
-        label: 'Trang chủ',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6zM14 9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-2z"/></svg>`,
-        href: '/src/pages/admin/index.html'
-      },
-      {
-        id: 'users',
-        label: 'Người dùng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0zM17 16a7 7 0 1 0-14 0h14zM3 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/></svg>`,
-        href: '/src/pages/admin/nguoiDung.html'
-      },
-      {
-        id: 'chinhanh',
-        label: 'Chi nhánh',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4zm8 2h3v3h-3V5zM5 5h3v3H5V5zm0 5h3v3H5v-3zm7 0h3v3h-3v-3z"/></svg>`,
-        href: '/src/pages/admin/chiNhanh.html'
-      },
-      {
-        id: 'nhacungcap',
-        label: 'Nhà cung cấp',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3zm1 2h12v10H4V5z"/></svg>`,
-        href: '/src/pages/admin/nhaCungCap.html'
-      },
-      {
-        id: 'khachhang',
-        label: 'Khách hàng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 10c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`,
-        href: '/src/pages/admin/khachHang.html'
-      },
-      {
-        id: 'thuoc',
-        label: 'Thuốc',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></svg>`,
-        href: '/src/pages/admin/thuoc.html'
-      }
-    ]
-  });
+  const sidebar = new Sidebar({ activeItem: 'khachhang' });
 
   const sidebarContainer = document.getElementById('sidebar-container');
   if (sidebarContainer) {

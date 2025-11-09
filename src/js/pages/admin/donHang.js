@@ -42,34 +42,55 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
 });
 
+// Store component instances globally for re-rendering
+let header, sidebar, footer, searchBox;
+
 function initializeLayout() {
-  const header = new Header({ appTitle: 'Quản lý bán thuốc', logoText: 'QT', onMenuToggle: toggleMobileSidebar });
-  document.getElementById('header').innerHTML = header.render();
-  header.attachEventListeners();
-
-  const sidebar = new Sidebar({
-    activeItem: 'donhang',
-    menuItems: [
-      { id: 'dashboard', label: 'Trang chủ', href: '/src/pages/admin/index.html' },
-      { id: 'users', label: 'Người dùng', href: '/src/pages/admin/nguoiDung.html' },
-      { id: 'khachhang', label: 'Khách hàng', href: '/src/pages/admin/khachHang.html' },
-      { id: 'thuoc', label: 'Thuốc', href: '/src/pages/admin/thuoc.html' },
-      { id: 'donhang', label: 'Đơn hàng', href: '/src/pages/admin/donHang.html' }
-    ]
+  // Initialize header
+  header = new Header({ 
+    appTitle: 'Quản lý bán thuốc', 
+    logoText: 'QT', 
+    onMenuToggle: toggleMobileSidebar 
   });
-  document.getElementById('sidebar-container').innerHTML = sidebar.render();
-  sidebar.attachEventListeners();
+  const headerEl = document.getElementById('header');
+  if (headerEl) {
+    headerEl.innerHTML = header.render();
+    header.attachEventListeners();
+  }
 
-  const footer = new Footer({ copyrightText: '© 2024 Quản lý bán thuốc.' });
-  document.getElementById('footer').innerHTML = footer.render();
+  // Initialize sidebar
+  sidebar = new Sidebar({ activeItem: 'donhang' });
+  const sidebarEl = document.getElementById('sidebar-container');
+  if (sidebarEl) {
+    sidebarEl.innerHTML = sidebar.render();
+    sidebar.attachEventListeners();
+  }
 
-  const searchBox = new SearchBox({
+  // Initialize footer
+  footer = new Footer({ copyrightText: '© 2024 Quản lý bán thuốc.' });
+  const footerEl = document.getElementById('footer');
+  if (footerEl) {
+    footerEl.innerHTML = footer.render();
+  }
+
+  // Initialize search box
+  searchBox = new SearchBox({
     containerId: 'search-container',
     placeholder: 'Tìm kiếm đơn hàng...',
     onSearch: handleSearch
   });
-  document.getElementById('search-container').innerHTML = searchBox.render();
-  searchBox.attachEventListeners();
+  const searchEl = document.getElementById('search-container');
+  if (searchEl) {
+    searchEl.innerHTML = searchBox.render();
+    searchBox.attachEventListeners();
+  }
+
+  // Force initial render
+  setTimeout(() => {
+    document.getElementById('header')?.innerHTML = header.render();
+    document.getElementById('sidebar-container')?.innerHTML = sidebar.render();
+    document.getElementById('footer')?.innerHTML = footer.render();
+  }, 0);
 }
 
 async function loadOrders() {
@@ -525,6 +546,11 @@ function toggleMobileSidebar() {
 function setupEventListeners() {
   document.getElementById('add-order-btn')?.addEventListener('click', openAddOrderModal);
   document.getElementById('sidebar-overlay')?.addEventListener('click', toggleMobileSidebar);
+
+  // Force re-render components to ensure they're displayed
+  document.getElementById('header')?.innerHTML = header.render();
+  document.getElementById('sidebar-container')?.innerHTML = sidebar.render();
+  document.getElementById('footer')?.innerHTML = footer.render();
 }
 
 function showLoading(show) {

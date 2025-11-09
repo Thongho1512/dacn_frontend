@@ -52,33 +52,7 @@ function initializeLayout() {
 
   // Sidebar
   const sidebar = new Sidebar({
-    activeItem: 'thuoc',
-    menuItems: [
-      {
-        id: 'dashboard',
-        label: 'Trang chủ',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6zM14 9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-2z"/>
-        </svg>`,
-        href: '/src/pages/admin/index.html'
-      },
-      {
-        id: 'users',
-        label: 'Quản lý người dùng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M9 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0zM17 16a7 7 0 1 0-14 0h14zM3 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/>
-        </svg>`,
-        href: '/src/pages/admin/nguoiDung.html'
-      },
-      {
-        id: 'thuoc',
-        label: 'Quản lý thuốc',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 2a1 1 0 0 1 1 1v1.323l3.954 1.582 1.599-.8a1 1 0 0 1 1.346 1.098l-.164 1.638 1.638.164A1 1 0 0 1 18.3 8.952l-.8 1.6L19.323 14a1 1 0 0 1-1.098 1.346l-1.638-.164-.164 1.638a1 1 0 0 1-1.346 1.098l-1.6-.8L10 19.323V21a1 1 0 1 1-2 0v-1.323l-3.954-1.582-1.599.8a1 1 0 0 1-1.346-1.098l.164-1.638-1.638-.164A1 1 0 0 1 1.7 15.048l.8-1.6L.677 10a1 1 0 0 1 1.098-1.346l1.638.164.164-1.638A1 1 0 0 1 4.923 6.08l1.6.8L10 4.677V3a1 1 0 0 1 1-1z"/>
-        </svg>`,
-        href: '/src/pages/admin/thuoc.html'
-      }
-    ]
+    activeItem: 'thuoc'
   });
 
   const sidebarContainer = document.getElementById('sidebar-container');

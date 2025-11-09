@@ -38,13 +38,7 @@ function initializeLayout() {
   header.attachEventListeners();
 
   const sidebar = new Sidebar({
-    activeItem: 'baocao',
-    menuItems: [
-      { id: 'dashboard', label: 'Trang chủ', href: '/src/pages/admin/index.html' },
-      { id: 'baocao', label: 'Báo cáo', href: '/src/pages/admin/baoCao.html' },
-      { id: 'thuoc', label: 'Thuốc', href: '/src/pages/admin/thuoc.html' },
-      { id: 'donhang', label: 'Đơn hàng', href: '/src/pages/admin/donHang.html' }
-    ]
+    activeItem: 'baoCao'
   });
   document.getElementById('sidebar-container').innerHTML = sidebar.render();
   sidebar.attachEventListeners();

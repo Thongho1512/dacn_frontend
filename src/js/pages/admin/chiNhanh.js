@@ -57,45 +57,7 @@ function initializeLayout() {
 
   // Sidebar
   const sidebar = new Sidebar({
-    activeItem: 'chinhanh',
-    menuItems: [
-      {
-        id: 'dashboard',
-        label: 'Trang chủ',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6zM14 9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-2z"/></svg>`,
-        href: '/src/pages/admin/index.html'
-      },
-      {
-        id: 'users',
-        label: 'Người dùng',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0zM17 16a7 7 0 1 0-14 0h14zM3 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/></svg>`,
-        href: '/src/pages/admin/nguoiDung.html'
-      },
-      {
-        id: 'vaitro',
-        label: 'Vai trò',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7 9a7 7 0 1 1 14 0H3z"/></svg>`,
-        href: '/src/pages/admin/vaiTro.html'
-      },
-      {
-        id: 'chinhanh',
-        label: 'Chi nhánh',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4zm8 2h3v3h-3V5zM5 5h3v3H5V5zm0 5h3v3H5v-3zm7 0h3v3h-3v-3z"/></svg>`,
-        href: '/src/pages/admin/chiNhanh.html'
-      },
-      {
-        id: 'danhmuc',
-        label: 'Danh mục',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z"/><path d="M3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></svg>`,
-        href: '/src/pages/admin/danhMuc.html'
-      },
-      {
-        id: 'thuoc',
-        label: 'Thuốc',
-        icon: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4zM3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></svg>`,
-        href: '/src/pages/admin/thuoc.html'
-      }
-    ]
+    activeItem: 'chinhanh'
   });
 
   const sidebarContainer = document.getElementById('sidebar-container');
