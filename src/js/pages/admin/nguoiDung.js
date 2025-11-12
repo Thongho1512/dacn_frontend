@@ -11,6 +11,8 @@ import { Table } from '../../components/admin/table.js';
 import { SearchBox } from '../../components/admin/searchBox.js';
 import { requireAuth } from '../../api/authApi.js';
 import { getAllUsers, createUser, updateUser, deleteUser } from '../../api/nguoiDungApi.js';
+import { getAllActiveVaiTros } from '../../api/vaiTroApi.js';
+import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
 import { formatDate } from '../../utils/helpers.js';
 
 // Check authentication
@@ -26,13 +28,54 @@ let currentPage = 1;
 let pageSize = 10;
 let totalCount = 0;
 let currentEditingUserId = null;
+let rolesList = [];
+let branchesList = [];
 
 // Initialize
 window.addEventListener('DOMContentLoaded', async () => {
   initializeLayout();
+  // Preload roles and branches used by the form
+  await Promise.all([loadRoles(), loadBranches()]);
   await loadUsers();
   setupEventListeners();
 });
+
+// Load roles for dropdown
+async function loadRoles() {
+  try {
+    const response = await getAllActiveVaiTros();
+    // Response shape may be { success, data: { items: [...] } } or an array
+    if (response && response.success && response.data) {
+      rolesList = response.data.items || response.data;
+    } else if (Array.isArray(response)) {
+      rolesList = response;
+    } else if (response && response.data && Array.isArray(response.data)) {
+      rolesList = response.data;
+    } else {
+      rolesList = [];
+    }
+  } catch (error) {
+    console.error('Failed to load roles:', error);
+    rolesList = [];
+  }
+}
+
+// Load branches for dropdown
+async function loadBranches() {
+  try {
+    const response = await getAllChiNhanhs({ pageNumber: 1, pageSize: 1000, active: true });
+    if (response && response.success && response.data) {
+      branchesList = response.data.items || response.data;
+    } else if (Array.isArray(response)) {
+      branchesList = response;
+    } else {
+      branchesList = [];
+    }
+  } catch (error) {
+    console.error('Failed to load branches:', error);
+    branchesList = [];
+  }
+}
 
 /**
  * Initialize page layout
@@ -289,7 +332,7 @@ async function handleSearch(query) {
 /**
  * Open add user modal
  */
-function openAddUserModal() {
+async function openAddUserModal() {
   currentEditingUserId = null;
   
   const template = document.getElementById('user-form-template');
@@ -311,6 +354,8 @@ function openAddUserModal() {
     currentModal.attachEventListeners();
     currentModal.open();
     
+    // Populate dropdowns with preloaded data
+    await populateFormDropdowns();
     setupFormEventListeners();
   }
 }
@@ -318,7 +363,7 @@ function openAddUserModal() {
 /**
  * Edit user
  */
-window.editUser = function(userId) {
+window.editUser = async function(userId) {
   const user = users.find(u => u.id === userId);
   if (!user) return;
 
@@ -343,10 +388,51 @@ window.editUser = function(userId) {
     currentModal.attachEventListeners();
     currentModal.open();
     
+    // Populate dropdowns and then fill form data so selects exist
+    await populateFormDropdowns();
     setupFormEventListeners();
     fillFormData(user);
   }
 };
+
+// Populate role and branch selects inside the modal form
+async function populateFormDropdowns() {
+  // Ensure data is loaded
+  if (!rolesList || rolesList.length === 0) await loadRoles();
+  if (!branchesList || branchesList.length === 0) await loadBranches();
+
+  const roleSelect = document.getElementById('idvaiTro');
+  if (roleSelect) {
+    // clear existing options but keep placeholder
+    const placeholder = roleSelect.querySelector('option[value=""]');
+    roleSelect.innerHTML = '';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = 'Chọn vai trò';
+    roleSelect.appendChild(emptyOpt);
+    rolesList.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.tenVaiTro || r.name || String(r.id);
+      roleSelect.appendChild(opt);
+    });
+  }
+
+  const branchSelect = document.getElementById('idchiNhanh');
+  if (branchSelect) {
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = 'Chọn chi nhánh';
+    branchSelect.innerHTML = '';
+    branchSelect.appendChild(emptyOpt);
+    branchesList.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.tenChiNhanh || b.name || (`Chi nhánh ${b.id}`);
+      branchSelect.appendChild(opt);
+    });
+  }
+}
 
 /**
  * Fill form with user data
@@ -404,7 +490,11 @@ async function handleFormSubmit(e) {
   try {
     let response;
     
-    if (currentEditingUserId) {
+    // If updating and password is empty, don't send it so backend won't overwrite
+    if (currentEditingUserId && (!data.matKhau || data.matKhau.length === 0)) {
+      delete data.matKhau;
+      response = await updateUser(currentEditingUserId, data);
+    } else if (currentEditingUserId) {
       response = await updateUser(currentEditingUserId, data);
     } else {
       response = await createUser(data);
@@ -443,8 +533,11 @@ function validateForm(data) {
   }
 
   if (!data.matKhau || data.matKhau.length < 6) {
-    showNotification('Mật khẩu phải có ít nhất 6 ký tự', 'error');
-    return false;
+    // Password required only when creating a new user
+    if (!currentEditingUserId) {
+      showNotification('Mật khẩu phải có ít nhất 6 ký tự', 'error');
+      return false;
+    }
   }
 
   if (!data.idvaiTro || isNaN(data.idvaiTro)) {

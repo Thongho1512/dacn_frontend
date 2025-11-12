@@ -3,18 +3,12 @@
  * Styles specific to the dashboard page
  */
 
-/**
- * Dashboard Styles
- * Styles specific to the dashboard page
- */
-
 /* Dashboard Body Override */
 body {
   margin: 0;
   padding: 0;
   overflow: hidden;
 }
-
 
 /* Dashboard Container */
 .dashboard-container {
@@ -208,7 +202,7 @@ body {
   overflow: hidden;
 }
 
-/* Sidebar */
+/* Sidebar - UPDATED WITH SCROLLBAR */
 .sidebar {
   width: 260px;
   background: #ffffff;
@@ -217,11 +211,33 @@ body {
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 64px);
 }
 
+/* Custom scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Nav Menu */
 .nav-menu {
   padding: 16px;
   flex: 1;
+  min-height: min-content;
 }
 
 .nav-item {
@@ -236,6 +252,7 @@ body {
   color: #64748b;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -254,6 +271,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 /* Content Area */
@@ -717,7 +735,31 @@ body {
   display: block;
 }
 
-/* Responsive */
+/* ==========================================
+   RESPONSIVE STYLES
+   ========================================== */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .nav-item {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+
+  .content-area {
+    padding: 20px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+}
+
+/* Mobile (≤768px) */
 @media (max-width: 768px) {
   .mobile-menu-btn {
     display: flex;
@@ -732,10 +774,16 @@ body {
     bottom: 0;
     z-index: 100;
     transition: left 0.3s;
+    max-height: calc(100vh - 64px);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   }
 
   .sidebar.mobile-open {
     left: 0;
+  }
+
+  .sidebar-overlay {
+    top: 64px;
   }
 
   .user-info {
@@ -768,6 +816,7 @@ body {
   }
 }
 
+/* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .header {
     padding: 0 16px;
@@ -783,6 +832,20 @@ body {
     font-size: 16px;
   }
 
+  .sidebar {
+    width: 240px;
+    left: -240px;
+  }
+
+  .nav-menu {
+    padding: 12px;
+  }
+
+  .nav-item {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
   .actions {
     flex-direction: column;
     gap: 4px;
@@ -790,5 +853,13 @@ body {
 
   .actions .btn {
     width: 100%;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .content-area {
+    padding: 12px;
   }
 }

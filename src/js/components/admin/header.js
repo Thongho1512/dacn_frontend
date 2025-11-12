@@ -45,7 +45,7 @@ export class Header {
             </svg>
           </button>
           
-          ${this.config.showNotifications ? this.renderNotifications() : ''}
+          
           ${this.config.showProfile ? this.renderUserProfile(userInfo) : ''}
         </div>
       </header>
