@@ -14,7 +14,7 @@ form.addEventListener("submit", async (e) => {
     showAlert("Đăng nhập thành công!", "success");
 
     // Chuyển hướng sang dashboard
-    setTimeout(() => (window.location.href = "/src/pages/admin/index.html"), 1000);
+    setTimeout(() => (window.location.href = "/index.html"), 1000);
   } catch (err) {
     showAlert("Sai tài khoản hoặc mật khẩu", "error");
   } finally {
