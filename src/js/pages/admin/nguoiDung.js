@@ -14,6 +14,7 @@ import { getAllUsers, createUser, updateUser, deleteUser } from '../../api/nguoi
 import { getAllActiveVaiTros } from '../../api/vaiTroApi.js';
 import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
 import { formatDate } from '../../utils/helpers.js';
+import { enhanceAllSelects } from '../../utils/selectSearch.js';
 
 // Check authentication
 requireAuth();
@@ -356,6 +357,9 @@ async function openAddUserModal() {
     
     // Populate dropdowns with preloaded data
     await populateFormDropdowns();
+    // Ensure selects inside modal are enhanced (for dynamic options)
+    const modalBody = document.getElementById('user-modal-body') || document.getElementById('user-modal')?.querySelector('.modal-body');
+    if (modalBody) enhanceAllSelects(modalBody);
     setupFormEventListeners();
   }
 }
@@ -390,6 +394,8 @@ window.editUser = async function(userId) {
     
     // Populate dropdowns and then fill form data so selects exist
     await populateFormDropdowns();
+      const modalBody = document.getElementById('user-modal-body') || document.getElementById('user-modal')?.querySelector('.modal-body');
+      if (modalBody) enhanceAllSelects(modalBody);
     setupFormEventListeners();
     fillFormData(user);
   }

@@ -2,6 +2,7 @@
  * Modal Component
  * Reusable modal dialog component
  */
+import { enhanceAllSelects } from '../../utils/selectSearch.js';
 
 export class Modal {
   constructor(config = {}) {
@@ -74,6 +75,14 @@ export class Modal {
       overlay.classList.add('active');
       this.isOpen = true;
       document.body.style.overflow = 'hidden'; // Prevent body scroll
+
+      // Enhance any selects rendered inside the modal body so they become searchable
+      try {
+        const body = document.getElementById(`${this.config.id}-body`);
+        if (body) enhanceAllSelects(body);
+      } catch (e) {
+        // ignore
+      }
 
       if (this.config.onOpen) {
         this.config.onOpen();
