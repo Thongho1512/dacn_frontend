@@ -373,13 +373,7 @@ function handleCustomerChange(e) {
 }
 
 function addOrderDetail() {
-  // kiểm tra xem đã chọn chi nhánh chưa
-  const branchSelect = document.getElementById('idChiNhanh');
-  if(!branchSelect.value){
-    showNotification('⚠️ Vui lòng chọn chi nhánh trước khi thêm thuốc', 'warning');
-    branchSelect.focus();
-    return;
-  }
+  
 
   const detailId = Date.now();
   const detail = {
