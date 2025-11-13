@@ -19,6 +19,19 @@ export async function getAllThuoc(params = {}) {
   return await response.json();
 }
 
+export async function getThuocByChiNhanh(idChiNhanh, params = {}){
+  const queryString = new URLSearchParams(params).toString();
+  const url = `v1/thuocs/by-branch/${idChiNhanh}${queryString ? '?' + queryString : ''}`;
+  const response = await apiFetch(url);
+
+  if(!response.ok){
+    const error = await response.json();
+    throw new Error(error.message || 'Lấy danh sách thuốc thất bại.');
+  }
+
+  return await response.json();
+}
+
 /**
  * Get medicine by ID
  * @param {string} id - Medicine ID

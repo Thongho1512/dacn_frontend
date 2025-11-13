@@ -14,7 +14,7 @@ import { getAllDonHangs, createDonHang, deleteDonHang, getDonHangById } from '..
 import { getAllKhachHangs } from '../../api/khachHangApi.js';
 import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
 import { getAllPhuongThucThanhToans } from '../../api/PhuongThucThanhToanApi.js';
-import { getAllThuoc } from '../../api/thuocApi.js';
+import { getAllThuoc, getThuocByChiNhanh } from '../../api/thuocApi.js';
 
 requireAuth();
 
@@ -29,6 +29,7 @@ let currentModal = null;
 let currentPage = 1;
 let pageSize = 10;
 let totalCount = 0;
+let currentBranchId = null;
 
 // Constants
 const DIEM_TO_VND = 1000; // 1 điểm = 1,000 VNĐ
@@ -209,9 +210,59 @@ async function loadPaymentMethods() {
   paymentMethods = response.data || [];
 }
 
-async function loadMedicines() {
-  const response = await getAllThuoc({ pageNumber: 1, pageSize: 1000, active: true });
-  medicines = response.data?.items || [];
+async function loadMedicines(branchId = null) {
+  try{
+    let response;
+
+    if(branchId){
+      // lấy thuốc theo chi nhánh
+      response = await getThuocByChiNhanh(branchId, {
+        pageNumber: 1,
+        pageSize: 1000,
+        active: true
+      });
+    } else {
+      response = await getAllThuoc({
+        pageNumber: 1,
+        pageSize: 1000,
+        active: true
+      });
+    }
+
+    medicines = response.data?.items || [];
+    updateMedicineDropdowns();
+  } catch (error) {
+    console.error('Failed to load medicines:', error);
+    medicines = [];
+    showNotification('Không thể tải danh sách thuốc', 'error');
+  }
+}
+
+function updateMedicineDropdowns() {
+  const allMedicineSelects = document.querySelectorAll('.detail-medicine');
+
+  allMedicineSelects.forEach(select => {
+    const currentValue = select.value;
+
+    // xóa các option cũ
+    while (select.options.length > 1){
+      select.remove(1);
+    }
+
+    // Thêm các thuốc mới
+    medicines.forEach(m => {
+      const option = document.createElement('option');
+      option.value = m.id;
+      option.textContent = `${m.tenThuoc} - ${formatCurrency(m.giaBan)}`;
+      option.dataset.price = m.giaBan;
+      select.appendChild(option);
+    });
+    
+    // Khôi phục giá trị đã chọn nếu còn tồn tại
+    if (currentValue && medicines.find(m => m.id == currentValue)) {
+      select.value = currentValue;
+    }
+  })
 }
 
 function populateDropdowns() {
@@ -234,6 +285,8 @@ function populateDropdowns() {
     branchSelect.appendChild(option);
   });
 
+  branchSelect.addEventListener('change', handleBranchChange);
+
   const paymentSelect = document.getElementById('idphuongThucTt');
   paymentMethods.forEach(p => {
     const option = document.createElement('option');
@@ -241,6 +294,65 @@ function populateDropdowns() {
     option.textContent = p.tenPhuongThuc;
     paymentSelect.appendChild(option);
   });
+}
+
+async function handleBranchChange(e){
+  const branchId = e.target.value;
+  const warningDiv = document.getElementById('branch-warning');
+
+  if (!branchId) {
+    // hiển thị cảnh báo
+    if(warningDiv) warningDiv.style.display = 'block';
+    // Nếu không chọn chi nhánh, xóa tất cả chi tiết đơn hàng
+    orderDetails = [];
+    document.querySelector('.order-details-list').innerHTML = `
+      <div class="order-detail-item order-detail-header">
+        <div>Thuốc</div>
+        <div>Số lượng</div>
+        <div>Đơn giá (VNĐ)</div>
+        <div>Thành tiền</div>
+        <div></div>
+      </div>
+    `;
+    medicines = [];
+    currentBranchId = null;
+    calculateOrderSummary();
+    return;
+  }
+
+  // Ẩn cảnh báo khi đã chọn chi nhánh
+  if(warningDiv) warningDiv.style.display = 'none';
+  
+  // Hiển thị loading
+  const medicineSelects = document.querySelectorAll('.detail-medicine');
+  medicineSelects.forEach(select => {
+    select.disabled = true;
+    select.innerHTML = '<option value="">Đang tải...</option>';
+  });
+  
+  try {
+    currentBranchId = parseInt(branchId);
+    
+    // Tải lại danh sách thuốc theo chi nhánh
+    await loadMedicines(currentBranchId);
+    
+    if (medicines.length === 0) {
+      showNotification('⚠️ Chi nhánh này chưa có thuốc nào có tồn kho', 'warning');
+    } else {
+      showNotification(`✅ Đã tải ${medicines.length} thuốc có sẵn tại chi nhánh này`, 'success');
+    }
+    
+  } catch (error) {
+    console.error('Error loading medicines by branch:', error);
+    showNotification('❌ Không thể tải danh sách thuốc của chi nhánh', 'error');
+    medicines = [];
+    currentBranchId = null;
+  } finally {
+    // Enable lại các select
+    medicineSelects.forEach(select => {
+      select.disabled = false;
+    });
+  }
 }
 
 function handleCustomerChange(e) {
@@ -261,6 +373,14 @@ function handleCustomerChange(e) {
 }
 
 function addOrderDetail() {
+  // kiểm tra xem đã chọn chi nhánh chưa
+  const branchSelect = document.getElementById('idChiNhanh');
+  if(!branchSelect.value){
+    showNotification('⚠️ Vui lòng chọn chi nhánh trước khi thêm thuốc', 'warning');
+    branchSelect.focus();
+    return;
+  }
+
   const detailId = Date.now();
   const detail = {
     id: detailId,
