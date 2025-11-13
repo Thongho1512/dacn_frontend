@@ -534,7 +534,8 @@ body {
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   animation: modalSlideIn 0.3s ease;
 }
@@ -593,6 +594,9 @@ body {
 
 .modal-body {
   padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .modal-footer {
@@ -601,6 +605,8 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  flex-shrink: 0;
+  background: white;
 }
 
 /* Form Styles */
@@ -654,6 +660,11 @@ body {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 0;
+  z-index: 100;
 }
 
 /* Footer */
