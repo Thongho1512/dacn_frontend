@@ -34,12 +34,12 @@ export function enhanceSelect(originalSelect) {
   caret.innerHTML = '▾';
   control.appendChild(caret);
 
-  // Create dropdown
+  // Create dropdown (we will append to document.body to avoid being clipped by overflow)
   const dropdown = document.createElement('div');
   dropdown.className = 'combobox-dropdown';
   dropdown.setAttribute('role', 'listbox');
-  dropdown.style.position = 'absolute';
-  dropdown.style.zIndex = '9999';
+  dropdown.style.position = 'fixed';
+  dropdown.style.zIndex = '99999';
   dropdown.style.display = 'none';
   dropdown.style.minWidth = '200px';
   dropdown.style.maxHeight = '260px';
@@ -115,21 +115,22 @@ export function enhanceSelect(originalSelect) {
 
   dropdown.appendChild(list);
 
-  // Insert elements
+  // Insert elements. Keep the original select inside wrapper, but append dropdown to body
   originalSelect.parentNode.insertBefore(wrapper, originalSelect);
   wrapper.appendChild(originalSelect);
   wrapper.appendChild(control);
-  wrapper.appendChild(dropdown);
+  // append dropdown to body to avoid clipping inside modal or overflow:hidden containers
+  document.body.appendChild(dropdown);
 
   // Open/close
   const openDropdown = () => {
-    // Position dropdown below the control
+    // Position dropdown below the control (using viewport coordinates)
     try {
       const rect = control.getBoundingClientRect();
       dropdown.style.minWidth = rect.width + 'px';
-      // If dropdown is appended to wrapper, set top relative
-      dropdown.style.top = control.offsetHeight + 'px';
-      dropdown.style.left = '0px';
+      // place dropdown just below the control
+      dropdown.style.left = Math.max(8, rect.left) + 'px';
+      dropdown.style.top = (rect.bottom + 4) + 'px';
     } catch (e) {
       // ignore
     }
@@ -169,9 +170,24 @@ export function enhanceSelect(originalSelect) {
   search.addEventListener('input', (e) => filter(e.target.value));
 
   // Close when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!wrapper.contains(e.target)) closeDropdown();
-  });
+  // Use pointerdown on document to catch interactions before focus shifts
+  const outsideHandler = (e) => {
+    if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) closeDropdown();
+  };
+  document.addEventListener('pointerdown', outsideHandler);
+
+  // Reposition or close on scroll/resize to keep dropdown aligned
+  const onScrollResize = () => {
+    if (dropdown.style.display === 'block') {
+      try {
+        const rect = control.getBoundingClientRect();
+        dropdown.style.left = Math.max(8, rect.left) + 'px';
+        dropdown.style.top = (rect.bottom + 4) + 'px';
+      } catch (e) { /* ignore */ }
+    }
+  };
+  window.addEventListener('scroll', onScrollResize, true);
+  window.addEventListener('resize', onScrollResize);
 
   // Build initial items
   buildItems();
