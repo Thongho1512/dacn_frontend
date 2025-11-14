@@ -1,3 +1,4 @@
+// src/js/utils/selectSearch.js
 // Inline searchable combobox enhancer
 // Replaces a native <select> with a lightweight combobox UI that contains
 // a search input inside the dropdown. The original <select> is kept (hidden)
@@ -34,12 +35,12 @@ export function enhanceSelect(originalSelect) {
   caret.innerHTML = '▾';
   control.appendChild(caret);
 
-  // Create dropdown (we will append to document.body to avoid being clipped by overflow)
+  // Create dropdown (append to document.body to avoid being clipped by overflow)
   const dropdown = document.createElement('div');
   dropdown.className = 'combobox-dropdown';
   dropdown.setAttribute('role', 'listbox');
   dropdown.style.position = 'fixed';
-  dropdown.style.zIndex = '99999';
+  dropdown.style.zIndex = '999999';
   dropdown.style.display = 'none';
   dropdown.style.minWidth = '200px';
   dropdown.style.maxHeight = '260px';
@@ -48,6 +49,7 @@ export function enhanceSelect(originalSelect) {
   dropdown.style.border = '1px solid #d1d5db';
   dropdown.style.borderRadius = '6px';
   dropdown.style.boxShadow = '0 6px 18px rgba(15,23,42,0.08)';
+  dropdown.style.pointerEvents = 'auto';
 
   // Search input inside dropdown
   const search = document.createElement('input');
@@ -92,21 +94,39 @@ export function enhanceSelect(originalSelect) {
         controlText.textContent = opt.textContent;
       }
 
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
         // set original select
         originalSelect.value = opt.value;
         // update display
         controlText.textContent = opt.textContent;
-        // close dropdown
-        closeDropdown();
+        // mark as selected
+        Array.from(list.children).forEach(li => li.classList.remove('selected'));
+        item.classList.add('selected');
+        // close dropdown immediately
+        dropdown.style.display = 'none';
+        control.setAttribute('aria-expanded', 'false');
+        search.value = '';
+        filter('');
         // trigger change
         originalSelect.dispatchEvent(new Event('change', { bubbles: true }));
       });
 
       item.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') item.click();
-        if (e.key === 'ArrowDown') { e.preventDefault(); item.nextSibling?.focus(); }
-        if (e.key === 'ArrowUp') { e.preventDefault(); item.previousSibling?.focus(); }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          item.click();
+        }
+        if (e.key === 'ArrowDown') { 
+          e.preventDefault(); 
+          item.nextSibling?.focus(); 
+        }
+        if (e.key === 'ArrowUp') { 
+          e.preventDefault(); 
+          item.previousSibling?.focus(); 
+        }
       });
 
       list.appendChild(item);
@@ -115,20 +135,27 @@ export function enhanceSelect(originalSelect) {
 
   dropdown.appendChild(list);
 
-  // Insert elements. Keep the original select inside wrapper, but append dropdown to body
+  // Insert elements
   originalSelect.parentNode.insertBefore(wrapper, originalSelect);
   wrapper.appendChild(originalSelect);
   wrapper.appendChild(control);
-  // append dropdown to body to avoid clipping inside modal or overflow:hidden containers
   document.body.appendChild(dropdown);
 
   // Open/close
   const openDropdown = () => {
-    // Position dropdown below the control (using viewport coordinates)
+    // Close any other open dropdowns first
+    document.querySelectorAll('.combobox-dropdown[style*="display: block"]').forEach(dd => {
+      if (dd !== dropdown) {
+        dd.style.display = 'none';
+        const ctrl = dd.previousElementSibling;
+        if (ctrl) ctrl.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Position dropdown below the control
     try {
       const rect = control.getBoundingClientRect();
       dropdown.style.minWidth = rect.width + 'px';
-      // place dropdown just below the control
       dropdown.style.left = Math.max(8, rect.left) + 'px';
       dropdown.style.top = (rect.bottom + 4) + 'px';
     } catch (e) {
@@ -136,14 +163,12 @@ export function enhanceSelect(originalSelect) {
     }
     dropdown.style.display = 'block';
     control.setAttribute('aria-expanded', 'true');
-    // allow focus after paint
     setTimeout(() => search.focus(), 0);
   };
 
   const closeDropdown = () => {
     dropdown.style.display = 'none';
     control.setAttribute('aria-expanded', 'false');
-    control.focus();
     search.value = '';
     filter('');
   };
@@ -158,32 +183,73 @@ export function enhanceSelect(originalSelect) {
   };
 
   // Event listeners
-  control.addEventListener('click', () => {
-    if (dropdown.style.display === 'block') closeDropdown(); else openDropdown();
+  control.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dropdown.style.display === 'block') {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
   });
 
   control.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); openDropdown(); const first = list.querySelector('.combobox-item:not([style*="display: none"])'); if (first) first.focus(); }
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (dropdown.style.display === 'block') closeDropdown(); else openDropdown(); }
+    if (e.key === 'ArrowDown') { 
+      e.preventDefault(); 
+      openDropdown(); 
+      const first = list.querySelector('.combobox-item:not([style*="display: none"])'); 
+      if (first) first.focus(); 
+    }
+    if (e.key === 'Enter' || e.key === ' ') { 
+      e.preventDefault(); 
+      if (dropdown.style.display === 'block') {
+        closeDropdown();
+      } else {
+        openDropdown();
+      }
+    }
   });
 
   search.addEventListener('input', (e) => filter(e.target.value));
 
   // Close when clicking outside
-  // Use pointerdown on document to catch interactions before focus shifts
   const outsideHandler = (e) => {
-    if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) closeDropdown();
+    if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+      if (dropdown.style.display === 'block') {
+        closeDropdown();
+      }
+    }
   };
-  document.addEventListener('pointerdown', outsideHandler);
+  
+  setTimeout(() => {
+    document.addEventListener('pointerdown', outsideHandler);
+    document.addEventListener('mousedown', outsideHandler);
+  }, 100);
 
-  // Reposition or close on scroll/resize to keep dropdown aligned
+  // Close on Escape key
+  const escapeHandler = (e) => {
+    if (e.key === 'Escape' && dropdown.style.display === 'block') {
+      closeDropdown();
+      control.focus();
+    }
+  };
+  document.addEventListener('keydown', escapeHandler);
+
+  // Reposition on scroll/resize
   const onScrollResize = () => {
     if (dropdown.style.display === 'block') {
       try {
         const rect = control.getBoundingClientRect();
         dropdown.style.left = Math.max(8, rect.left) + 'px';
         dropdown.style.top = (rect.bottom + 4) + 'px';
-      } catch (e) { /* ignore */ }
+        
+        // Close if control is no longer visible
+        if (rect.bottom < 0 || rect.top > window.innerHeight) {
+          closeDropdown();
+        }
+      } catch (e) { 
+        /* ignore */ 
+      }
     }
   };
   window.addEventListener('scroll', onScrollResize, true);
@@ -192,18 +258,19 @@ export function enhanceSelect(originalSelect) {
   // Build initial items
   buildItems();
 
-  // Observe changes to the original select (options added/removed) and rebuild items
+  // Observe changes to the original select
   try {
     const mo = new MutationObserver((mutationsList) => {
       let shouldRebuild = false;
       for (const m of mutationsList) {
-        if (m.type === 'childList') { shouldRebuild = true; break; }
+        if (m.type === 'childList') { 
+          shouldRebuild = true; 
+          break; 
+        }
       }
       if (shouldRebuild) {
-        // preserve current selection text
         const prevSelected = originalSelect.selectedOptions[0]?.value;
         buildItems();
-        // restore selection if possible
         if (prevSelected) {
           const opt = Array.from(originalSelect.options).find(o => o.value === prevSelected);
           if (opt) {
@@ -218,12 +285,13 @@ export function enhanceSelect(originalSelect) {
     // ignore
   }
 
-  // Keep original select changes in sync (if code changes select programmatically)
+  // Keep original select changes in sync
   originalSelect.addEventListener('change', () => {
     const selected = originalSelect.selectedOptions[0];
     controlText.textContent = selected ? selected.textContent : '';
-    // update selected class
-    Array.from(list.children).forEach(li => li.classList.toggle('selected', li.dataset.value === (selected && selected.value)));
+    Array.from(list.children).forEach(li => {
+      li.classList.toggle('selected', li.dataset.value === (selected && selected.value));
+    });
   });
 
   // Add minimal styles once
@@ -231,12 +299,26 @@ export function enhanceSelect(originalSelect) {
     const style = document.createElement('style');
     style.id = 'combobox-styles';
     style.textContent = `
-      .combobox-control { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; display:flex; align-items:center; justify-content:space-between; min-width:160px; cursor:pointer; }
+      .combobox-control { 
+        padding: 8px 10px; 
+        border: 1px solid #d1d5db; 
+        border-radius: 6px; 
+        background: #fff; 
+        display:flex; 
+        align-items:center; 
+        justify-content:space-between; 
+        min-width:160px; 
+        cursor:pointer;
+        position: relative;
+        z-index: 1;
+      }
       .combobox-control:focus { outline: 2px solid #60a5fa; }
       .combobox-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .combobox-caret { margin-left: 8px; color: #6b7280; }
+      .combobox-dropdown { pointer-events: auto !important; }
       .combobox-dropdown .combobox-item:hover { background: #f1f5f9; }
       .combobox-item.selected { background: #e6f4ff; font-weight:600; }
+      .combobox-item:active { background: #dbeafe; }
     `;
     document.head.appendChild(style);
   }
@@ -252,14 +334,18 @@ export function enhanceAllSelects(root = document) {
   }
 }
 
-// Auto-enhance on DOMContentLoaded for the document when this module is loaded
+// Auto-enhance on DOMContentLoaded
 if (typeof window !== 'undefined') {
   window.addEventListener('DOMContentLoaded', () => {
-    try { enhanceAllSelects(document); } catch (e) { /* ignore */ }
+    try { 
+      enhanceAllSelects(document); 
+    } catch (e) { 
+      /* ignore */ 
+    }
   });
 }
 
-// Global observer: automatically enhance newly added <select> elements in the document
+// Global observer: automatically enhance newly added <select> elements
 if (typeof window !== 'undefined') {
   try {
     const globalObserver = new MutationObserver((mutations) => {
@@ -267,11 +353,9 @@ if (typeof window !== 'undefined') {
         if (m.type !== 'childList') continue;
         for (const node of m.addedNodes) {
           if (!(node instanceof Element)) continue;
-          // If a select was directly added
           if (node.tagName === 'SELECT') {
             if (!node.dataset.enhanced) enhanceSelect(node);
           }
-          // Or if it contains selects deeper
           const selects = node.querySelectorAll ? node.querySelectorAll('select:not([data-enhanced])') : [];
           selects.forEach(s => enhanceSelect(s));
         }

@@ -12,22 +12,28 @@
   <link rel="stylesheet" href="../../css/dashboard.css" />
   
   <style>
+    /* Modal larger for this form */
+    #import-order-modal .modal {
+      max-width: 1200px !important;
+    }
+
     /* Chi tiết lô hàng styles */
     .batch-details-list {
       margin-top: 16px;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      overflow: hidden;
+      overflow-x: auto;
+      background: white;
     }
 
     .batch-detail-item {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 1fr 1fr auto;
+      grid-template-columns: 2.5fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr 1.2fr 60px;
       gap: 12px;
       padding: 12px;
       border-bottom: 1px solid #f1f5f9;
       align-items: center;
-      background: #fafafa;
+      min-width: 1000px;
     }
 
     .batch-detail-item:last-child {
@@ -39,34 +45,51 @@
       font-weight: 600;
       color: #475569;
       font-size: 13px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .form-select-small, .form-input-small {
-      padding: 8px 12px;
-      font-size: 14px;
+      padding: 8px 10px;
+      font-size: 13px;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
       width: 100%;
+      box-sizing: border-box;
+    }
+
+    .form-input-small:focus,
+    .form-select-small:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
 
     .btn-remove {
-      padding: 6px 12px;
+      padding: 6px;
       background: #fee2e2;
       color: #dc2626;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 16px;
       transition: all 0.2s;
       white-space: nowrap;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn-remove:hover {
       background: #fecaca;
+      transform: scale(1.1);
     }
 
     .order-summary {
-      margin-top: 20px;
+      margin-top: 24px;
       padding: 20px;
       background: #f8fafc;
       border-radius: 8px;
@@ -98,7 +121,7 @@
     }
 
     .validation-note {
-      margin-top: 8px;
+      margin-top: 12px;
       padding: 12px;
       background: #fef3c7;
       border: 1px solid #fbbf24;
@@ -107,14 +130,51 @@
       color: #92400e;
     }
 
+    .validation-note ul {
+      margin: 8px 0 0 20px;
+    }
+
+    .validation-note li {
+      margin: 4px 0;
+    }
+
+    /* Scrollable modal body */
+    #import-order-modal .modal-body {
+      max-height: calc(90vh - 200px);
+      overflow-y: auto;
+    }
+
+    /* Form actions at bottom */
+    .import-order-form .form-actions {
+      position: relative;
+      bottom: auto;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 2px solid #e2e8f0;
+      background: white;
+    }
+
+    .batch-details-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
     @media (max-width: 1024px) {
       .batch-detail-item {
         grid-template-columns: 1fr;
         gap: 8px;
+        min-width: auto;
       }
 
       .detail-grid {
         grid-template-columns: 1fr;
+      }
+
+      #import-order-modal .modal {
+        max-width: 95% !important;
       }
     }
   </style>
@@ -231,7 +291,7 @@
         
         <div class="validation-note">
           <strong>⚠️ Lưu ý quan trọng:</strong>
-          <ul style="margin: 8px 0 0 20px;">
+          <ul>
             <li>Ngày hết hạn phải sau ngày sản xuất</li>
             <li>Số lô phải duy nhất cho mỗi thuốc</li>
             <li>Giá nhập phải lớn hơn 0</li>
@@ -239,15 +299,15 @@
           </ul>
         </div>
         
-        <div id="batch-details-container">
+        <div class="batch-details-container">
           <div class="batch-details-list">
             <div class="batch-detail-item batch-detail-header">
               <div>Thuốc</div>
               <div>Số lô</div>
               <div>Ngày SX</div>
               <div>Ngày HSD</div>
-              <div>Số lượng</div>
-              <div>Giá nhập (VNĐ)</div>
+              <div>SL</div>
+              <div>Giá nhập</div>
               <div>Thành tiền</div>
               <div></div>
             </div>

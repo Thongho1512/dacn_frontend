@@ -471,13 +471,38 @@ function setupFormEventListeners() {
   const addDetailBtn = document.getElementById('add-detail-btn');
   const cancelBtn = document.getElementById('cancel-btn');
   
-  form.addEventListener('submit', handleFormSubmit);
-  addDetailBtn.addEventListener('click', addOrderDetail);
-  cancelBtn.addEventListener('click', closeModal);
+  console.log('🔗 Setting up form event listeners');
+  console.log('Form element:', form);
+  console.log('Add detail btn:', addDetailBtn);
+  console.log('Cancel btn:', cancelBtn);
+  
+  if (form) {
+    form.addEventListener('submit', handleFormSubmit);
+    console.log('✅ Form submit listener attached');
+  } else {
+    console.error('❌ Form element not found!');
+  }
+  
+  if (addDetailBtn) {
+    addDetailBtn.addEventListener('click', addOrderDetail);
+    console.log('✅ Add detail btn listener attached');
+  } else {
+    console.error('❌ Add detail btn not found!');
+  }
+  
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeModal);
+    console.log('✅ Cancel btn listener attached');
+  } else {
+    console.error('❌ Cancel btn not found!');
+  }
 }
 
 async function handleFormSubmit(e) {
   e.preventDefault();
+  
+  console.log('🔍 Form submit triggered');
+  console.log('📦 orderDetails:', orderDetails);
   
   if (orderDetails.length === 0) {
     showNotification('❌ Vui lòng thêm ít nhất 1 sản phẩm', 'error');
@@ -486,6 +511,7 @@ async function handleFormSubmit(e) {
   
   const invalidDetail = orderDetails.find(d => !d.idthuoc || d.soLuong <= 0);
   if (invalidDetail) {
+    console.log('❌ Invalid detail found:', invalidDetail);
     showNotification('❌ Vui lòng điền đầy đủ thông tin chi tiết đơn hàng', 'error');
     return;
   }
@@ -502,17 +528,24 @@ async function handleFormSubmit(e) {
     }))
   };
   
+  console.log('📝 Submitting order data:', data);
+  
   setFormLoading(true);
   
   try {
     const response = await createDonHang(data);
     
+    console.log('✅ API Response:', response);
+    
     if (response.success) {
       closeModal();
       showNotification('✅ Tạo đơn hàng thành công!', 'success');
       await loadOrders();
+    } else {
+      showNotification('❌ ' + (response.message || 'Không thể tạo đơn hàng'), 'error');
     }
   } catch (error) {
+    console.error('❌ Error creating order:', error);
     showNotification(error.message || 'Không thể tạo đơn hàng', 'error');
   } finally {
     setFormLoading(false);
