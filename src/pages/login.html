@@ -5,19 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Trang đăng nhập hệ thống quản trị">
     
-    <!-- Content Security Policy -->
+    <!-- ĐÃ SỬA CSP – CHO PHÉP GỌI API BACKEND -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        style-src 'self' 'unsafe-inline';
-        script-src 'self' 'unsafe-inline';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
         img-src 'self' data: https:;
-        font-src 'self';
-        connect-src 'self' https://localhost:7063 wss://localhost:5500 ws://localhost:5500;
+        connect-src 'self' 
+                    https://appofthong.xyz 
+                    https://*.appofthong.xyz 
+                    wss://appofthong.xyz;
+        frame-src 'self';
+        object-src 'none';
         base-uri 'self';
         form-action 'self';
     ">
     
-    <title>Đăng nhập - AdminPro</title>
+    <title>Đăng nhập - Quản lý bán thuốc</title>
     
     <!-- CSS -->
     <link rel="stylesheet" href="../css/reset.css" />
@@ -36,30 +41,12 @@
         <form class="login__form" id="loginForm" autocomplete="on">
             <div class="login__field">
                 <label for="tenDangNhap" class="login__label">Tên đăng nhập</label>
-                <input 
-                    type="text" 
-                    id="tenDangNhap" 
-                    name="tenDangNhap" 
-                    class="login__input" 
-                    placeholder="Nhập tên đăng nhập" 
-                    required 
-                    autocomplete="username"
-                    aria-label="Tên đăng nhập"
-                />
+                <input type="text" id="tenDangNhap" name="tenDangNhap" class="login__input" placeholder="Nhập tên đăng nhập" required autocomplete="username" />
             </div>
             
             <div class="login__field">
                 <label for="matKhau" class="login__label">Mật khẩu</label>
-                <input 
-                    type="password" 
-                    id="matKhau" 
-                    name="matKhau" 
-                    class="login__input" 
-                    placeholder="Nhập mật khẩu" 
-                    required 
-                    autocomplete="current-password"
-                    aria-label="Mật khẩu"
-                />
+                <input type="password" id="matKhau" name="matKhau" class="login__input" placeholder="Nhập mật khẩu" required autocomplete="current-password" />
             </div>
 
             <button type="submit" class="login__button" id="loginButton">
@@ -69,10 +56,8 @@
                 </span> 
             </button>
         </form>
-
     </main>
 
-    <!-- JavaScript Module -->
     <script type="module" src="../js/pages/login.js"></script>
 </body>
 </html>
