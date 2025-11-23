@@ -15,7 +15,7 @@ import {
   createNhaCungCap, 
   updateNhaCungCap, 
   deleteNhaCungCap 
-} from '../api/nhaCungCapApi.js';
+} from '../../api/nhaCungCapApi.js';
 
 // Check authentication
 requireAuth();
