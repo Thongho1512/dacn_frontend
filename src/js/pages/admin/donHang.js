@@ -10,7 +10,7 @@ import { Modal } from '../../components/admin/modal.js';
 import { Table } from '../../components/admin/table.js';
 import { SearchBox } from '../../components/admin/searchBox.js';
 import { requireAuth } from '../../api/authApi.js';
-import { getAllDonHangs, createDonHang, deleteDonHang, getDonHangById } from '../../api/donHangApi.js';
+import { getAllDonHangs, createDonHang, deleteDonHang, getDonHangById, updateDonHang } from '../../api/donHangApi.js';
 import { getAllKhachHangs } from '../../api/khachHangApi.js';
 import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
 import { getAllPhuongThucThanhToans } from '../../api/PhuongThucThanhToanApi.js';
@@ -30,6 +30,7 @@ let currentPage = 1;
 let pageSize = 10;
 let totalCount = 0;
 let currentBranchId = null;
+let currentEditingOrderId = null;
 
 // Constants
 const DIEM_TO_VND = 1000; // 1 điểm = 1,000 VNĐ
@@ -117,6 +118,9 @@ function renderOrdersTable() {
           <div class="actions">
             <button class="btn btn-secondary btn-sm" onclick="window.viewOrder(${r.id})" title="Xem chi tiết">
               👁️ Xem
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="window.editOrder(${r.id})" title="Chỉnh sửa">
+              ✏️ Sửa
             </button>
             <button class="btn btn-danger btn-sm" onclick="window.deleteOrder(${r.id})" title="Xóa">
               🗑️ Xóa
@@ -517,36 +521,66 @@ async function handleFormSubmit(e) {
   }
   
   const formData = new FormData(e.target);
-  const data = {
-    idkhachHang: formData.get('idkhachHang') ? parseInt(formData.get('idkhachHang')) : null,
-    idchiNhanh: parseInt(formData.get('idchiNhanh')),
-    idphuongThucTt: parseInt(formData.get('idphuongThucTt')),
-    chiTietDonHangs: orderDetails.map(d => ({
-      idthuoc: d.idthuoc,
-      soLuong: d.soLuong,
-      donGia: d.donGia
-    }))
-  };
-  
-  console.log('📝 Submitting order data:', data);
   
   setFormLoading(true);
   
   try {
-    const response = await createDonHang(data);
-    
-    console.log('✅ API Response:', response);
-    
-    if (response.success) {
-      closeModal();
-      showNotification('✅ Tạo đơn hàng thành công!', 'success');
-      await loadOrders();
+    if (currentEditingOrderId) {
+      // Update mode
+      const data = {
+        idkhachHang: formData.get('idkhachHang') ? parseInt(formData.get('idkhachHang')) : null,
+        idphuongThucTt: parseInt(formData.get('idphuongThucTt')),
+        chiTietDonHangs: orderDetails.map(d => ({
+          id: d.dbId || null,
+          idthuoc: d.idthuoc,
+          soLuong: d.soLuong,
+          donGia: d.donGia
+        }))
+      };
+
+      console.log('📝 Updating order data:', data);
+      
+      const response = await updateDonHang(currentEditingOrderId, data);
+      
+      console.log('✅ API Response:', response);
+      
+      if (response.success) {
+        closeModal();
+        showNotification('✅ Cập nhật đơn hàng thành công!', 'success');
+        await loadOrders();
+      } else {
+        showNotification('❌ ' + (response.message || 'Không thể cập nhật đơn hàng'), 'error');
+      }
     } else {
-      showNotification('❌ ' + (response.message || 'Không thể tạo đơn hàng'), 'error');
+      // Create mode
+      const data = {
+        idkhachHang: formData.get('idkhachHang') ? parseInt(formData.get('idkhachHang')) : null,
+        idchiNhanh: parseInt(formData.get('idchiNhanh')),
+        idphuongThucTt: parseInt(formData.get('idphuongThucTt')),
+        chiTietDonHangs: orderDetails.map(d => ({
+          idthuoc: d.idthuoc,
+          soLuong: d.soLuong,
+          donGia: d.donGia
+        }))
+      };
+      
+      console.log('📝 Submitting order data:', data);
+      
+      const response = await createDonHang(data);
+      
+      console.log('✅ API Response:', response);
+      
+      if (response.success) {
+        closeModal();
+        showNotification('✅ Tạo đơn hàng thành công!', 'success');
+        await loadOrders();
+      } else {
+        showNotification('❌ ' + (response.message || 'Không thể tạo đơn hàng'), 'error');
+      }
     }
   } catch (error) {
-    console.error('❌ Error creating order:', error);
-    showNotification(error.message || 'Không thể tạo đơn hàng', 'error');
+    console.error('❌ Error creating/updating order:', error);
+    showNotification(error.message || 'Không thể lưu đơn hàng', 'error');
   } finally {
     setFormLoading(false);
   }
@@ -623,6 +657,92 @@ window.viewOrder = async function(orderId) {
   }
 };
 
+window.editOrder = async function(orderId) {
+  try {
+    const response = await getDonHangById(orderId);
+    if (response.success && response.data) {
+      const order = response.data;
+      currentEditingOrderId = orderId;
+
+      // Load data
+      await Promise.all([
+        loadCustomers(),
+        loadBranches(),
+        loadPaymentMethods(),
+        loadMedicines()
+      ]);
+
+      // Build order details from response
+      orderDetails = order.chiTietDonHangs.map((d, idx) => ({
+        id: idx + 2000,
+        idthuoc: d.idthuoc,
+        soLuong: d.soLuong,
+        donGia: d.donGia,
+        thanhTien: d.thanhTien,
+        dbId: d.id
+      }));
+
+      const template = document.getElementById('order-form-template');
+      currentModal = new Modal({
+        id: 'order-modal',
+        title: '✏️ Cập nhật đơn hàng',
+        content: template.innerHTML,
+        size: 'large'
+      });
+
+      document.getElementById('modal-root').innerHTML = currentModal.render();
+      currentModal.attachEventListeners();
+      currentModal.open();
+      
+      populateDropdowns();
+      fillOrderEditForm(order);
+      renderOrderDetailsForEdit();
+      setupFormEventListeners();
+    }
+  } catch (error) {
+    showNotification(error.message || 'Không thể tải đơn hàng', 'error');
+  }
+};
+
+function fillOrderEditForm(order) {
+  document.getElementById('idkhachHang').value = order.idkhachHang || '';
+  document.getElementById('idchiNhanh').value = order.idchiNhanh;
+  document.getElementById('idphuongThucTt').value = order.idphuongThucTt;
+  document.getElementById('submit-btn').innerHTML = '<span class="btn-text">💾 Cập nhật</span><span class="btn-loading" style="display: none;"><span class="spinner"></span> Đang xử lý...</span>';
+  
+  currentBranchId = order.idchiNhanh;
+}
+
+function renderOrderDetailsForEdit() {
+  const container = document.querySelector('.order-details-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+  
+  orderDetails.forEach(detail => {
+    const itemHTML = `
+      <div class="order-detail-item" data-detail-id="${detail.id}">
+        <select class="form-select-small detail-medicine" data-detail-id="${detail.id}" required>
+          <option value="">-- Chọn thuốc --</option>
+          ${medicines.map(m => `<option value="${m.id}" data-price="${m.giaBan}" ${m.id === detail.idthuoc ? 'selected' : ''}>${m.tenThuoc} - ${formatCurrency(m.giaBan)}</option>`).join('')}
+        </select>
+        <input type="number" class="form-input-small detail-quantity" data-detail-id="${detail.id}" value="${detail.soLuong}" min="1" required />
+        <input type="text" class="form-input-small detail-price" readonly value="${formatCurrency(detail.donGia)}" />
+        <input type="text" class="form-input-small detail-total" readonly value="${formatCurrency(detail.thanhTien)}" />
+        <button type="button" class="btn-remove" onclick="window.removeOrderDetail(${detail.id})">✕</button>
+      </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', itemHTML);
+    
+    const medicineSelect = container.querySelector(`select[data-detail-id="${detail.id}"]`);
+    const quantityInput = container.querySelector(`input.detail-quantity[data-detail-id="${detail.id}"]`);
+    
+    if (medicineSelect) medicineSelect.addEventListener('change', () => handleDetailChange(detail.id));
+    if (quantityInput) quantityInput.addEventListener('input', () => handleDetailChange(detail.id));
+  });
+};
+
 window.deleteOrder = async function(orderId) {
   if (!confirm('🗑️ Bạn có chắc chắn muốn xóa đơn hàng này?')) return;
   
@@ -663,6 +783,7 @@ function closeModal() {
     currentModal = null;
   }
   orderDetails = [];
+  currentEditingOrderId = null;
 }
 
 function toggleMobileSidebar() {

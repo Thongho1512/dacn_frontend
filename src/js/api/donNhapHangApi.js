@@ -60,6 +60,44 @@ export async function createDonNhapHang(orderData) {
 }
 
 /**
+ * Cập nhật đơn nhập hàng
+ * @param {string|number} id - Đơn nhập hàng ID
+ * @param {Object} data - Dữ liệu cập nhật
+ * @returns {Promise<Object>} Kết quả cập nhật
+ */
+export async function updateDonNhapHang(id, data) {
+  const response = await apiFetch(`v1/donnhaphangs/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update import order');
+  }
+  
+  return { success: true };
+}
+
+/**
+ * Xóa đơn nhập hàng
+ * @param {string|number} id - Đơn nhập hàng ID
+ * @returns {Promise<Object>} Kết quả xóa
+ */
+export async function deleteDonNhapHang(id) {
+  const response = await apiFetch(`v1/donnhaphangs/${id}`, {
+    method: 'DELETE'
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete import order');
+  }
+  
+  return await response.json();
+}
+
+/**
  * Lấy tất cả thuốc (cho dropdown)
  * @param {Object} params - Query parameters
  * @returns {Promise<Object>} Dữ liệu thuốc

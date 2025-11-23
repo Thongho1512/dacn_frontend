@@ -15,7 +15,9 @@ import {
   getLoHangById, 
   getLoHangSapHetHan,
   getLoHangByThuocId,
-  updateLoHang 
+  updateLoHang,
+  createLoHang,
+  deleteLoHang
 } from '../../api/loHangApi.js';
 import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
 import { getAllThuoc } from '../../api/thuocApi.js';
@@ -434,7 +436,10 @@ function renderBatchesTable() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l.1.1a1.75 1.75 0 0 1 0 2.475l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25a1.75 1.75 0 0 1 .445-.758l8.61-8.61z"/>
               </svg>
-              Cập nhật
+              Sửa
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="window.deleteBatch(${row.id})" title="Xóa">
+              🗑️ Xóa
             </button>
           </div>
         `
@@ -872,6 +877,185 @@ async function handleRefresh() {
 }
 
 /**
+ * Open add batch modal
+ */
+async function openAddBatchModal() {
+  await Promise.all([
+    loadBranches(),
+    loadMedicines()
+  ]);
+
+  const content = `
+    <div style="padding: 20px;">
+      <form id="add-batch-form">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label for="batchChiNhanh" style="display: block; margin-bottom: 8px; font-weight: 600;">Chi nhánh:</label>
+            <select id="batchChiNhanh" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+              <option value="">-- Chọn chi nhánh --</option>
+              ${branches.map(b => `<option value="${b.id}">${b.tenChiNhanh}</option>`).join('')}
+            </select>
+          </div>
+          
+          <div>
+            <label for="batchThuoc" style="display: block; margin-bottom: 8px; font-weight: 600;">Thuốc:</label>
+            <select id="batchThuoc" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+              <option value="">-- Chọn thuốc --</option>
+              ${medicines.map(m => `<option value="${m.id}">${m.tenThuoc}</option>`).join('')}
+            </select>
+          </div>
+          
+          <div>
+            <label for="batchSoLo" style="display: block; margin-bottom: 8px; font-weight: 600;">Số lô:</label>
+            <input type="text" id="batchSoLo" required placeholder="Nhập số lô" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </div>
+          
+          <div>
+            <label for="batchSoLuong" style="display: block; margin-bottom: 8px; font-weight: 600;">Số lượng:</label>
+            <input type="number" id="batchSoLuong" required min="1" value="1" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </div>
+          
+          <div>
+            <label for="batchMfg" style="display: block; margin-bottom: 8px; font-weight: 600;">Ngày sản xuất:</label>
+            <input type="date" id="batchMfg" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </div>
+          
+          <div>
+            <label for="batchExp" style="display: block; margin-bottom: 8px; font-weight: 600;">Ngày hết hạn:</label>
+            <input type="date" id="batchExp" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </div>
+          
+          <div>
+            <label for="batchPrice" style="display: block; margin-bottom: 8px; font-weight: 600;">Giá nhập:</label>
+            <input type="number" id="batchPrice" required min="0" step="1000" value="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="submit" id="batch-submit" class="btn btn-primary" style="flex: 1;">
+            <span class="btn-text">✅ Tạo lô hàng</span>
+            <span class="btn-loading" style="display: none;"><span class="spinner"></span> Đang xử lý...</span>
+          </button>
+          <button type="button" id="batch-cancel" class="btn btn-secondary" style="flex: 1;">Hủy</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  const modal = new Modal({
+    id: 'add-batch-modal',
+    title: '✨ Tạo lô hàng thủ công',
+    content,
+    size: 'medium'
+  });
+
+  document.getElementById('modal-root').innerHTML = modal.render();
+  modal.attachEventListeners();
+  modal.open();
+
+  const form = document.getElementById('add-batch-form');
+  const cancelBtn = document.getElementById('batch-cancel');
+  const mfgInput = document.getElementById('batchMfg');
+  const expInput = document.getElementById('batchExp');
+
+  form.addEventListener('submit', handleAddBatchSubmit);
+  cancelBtn.addEventListener('click', () => modal.close());
+
+  // Date validation
+  mfgInput.addEventListener('change', () => {
+    if (mfgInput.value && expInput.value) {
+      const mfg = new Date(mfgInput.value);
+      const exp = new Date(expInput.value);
+      if (exp <= mfg) {
+        showNotification('❌ Ngày hết hạn phải sau ngày sản xuất', 'error');
+        expInput.value = '';
+      }
+    }
+  });
+
+  expInput.addEventListener('change', () => {
+    if (mfgInput.value && expInput.value) {
+      const mfg = new Date(mfgInput.value);
+      const exp = new Date(expInput.value);
+      if (exp <= mfg) {
+        showNotification('❌ Ngày hết hạn phải sau ngày sản xuất', 'error');
+        expInput.value = '';
+      }
+    }
+  });
+}
+
+/**
+ * Handle add batch form submit
+ */
+async function handleAddBatchSubmit(e) {
+  e.preventDefault();
+
+  const chiNhanhId = parseInt(document.getElementById('batchChiNhanh').value);
+  const thuocId = parseInt(document.getElementById('batchThuoc').value);
+  const soLo = document.getElementById('batchSoLo').value;
+  const soLuong = parseInt(document.getElementById('batchSoLuong').value);
+  const ngaySanXuat = document.getElementById('batchMfg').value;
+  const ngayHetHan = document.getElementById('batchExp').value;
+  const giaNhap = parseFloat(document.getElementById('batchPrice').value);
+
+  if (!chiNhanhId || !thuocId || !soLo || soLuong < 1 || !ngaySanXuat || !ngayHetHan || giaNhap < 0) {
+    showNotification('❌ Vui lòng điền đầy đủ thông tin', 'error');
+    return;
+  }
+
+  const submitBtn = document.getElementById('batch-submit');
+  submitBtn.disabled = true;
+  submitBtn.querySelector('.btn-text').style.display = 'none';
+  submitBtn.querySelector('.btn-loading').style.display = 'inline-flex';
+
+  try {
+    const data = {
+      idthuoc: thuocId,
+      soLo: soLo,
+      ngaySanXuat: ngaySanXuat,
+      ngayHetHan: ngayHetHan,
+      soLuong: soLuong,
+      giaNhap: giaNhap
+    };
+
+    const response = await createLoHang(data, chiNhanhId);
+    
+    if (response.success || response.data) {
+      document.getElementById('add-batch-modal').closest('.modal').parentElement.innerHTML = '';
+      showNotification('✅ Tạo lô hàng thủ công thành công!', 'success');
+      await loadBatches();
+      await loadExpiringBatches();
+    }
+  } catch (error) {
+    showNotification(error.message || 'Không thể tạo lô hàng', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.querySelector('.btn-text').style.display = 'inline';
+    submitBtn.querySelector('.btn-loading').style.display = 'none';
+  }
+}
+
+/**
+ * Delete batch
+ */
+window.deleteBatch = async function(batchId) {
+  if (!confirm('🗑️ Bạn có chắc chắn muốn xóa lô hàng này?')) return;
+
+  try {
+    showLoading(true);
+    await deleteLoHang(batchId);
+    showNotification('✅ Xóa lô hàng thành công', 'success');
+    await loadBatches();
+    await loadExpiringBatches();
+  } catch (error) {
+    showNotification(error.message || 'Không thể xóa lô hàng', 'error');
+  } finally {
+    showLoading(false);
+  }
+};
+
+/**
  * Setup event listeners
  */
 function setupEventListeners() {
@@ -883,6 +1067,11 @@ function setupEventListeners() {
   const refreshBtn = document.getElementById('refresh-btn');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', handleRefresh);
+  }
+
+  const addBatchBtn = document.getElementById('add-batch-btn');
+  if (addBatchBtn) {
+    addBatchBtn.addEventListener('click', openAddBatchModal);
   }
 
   // Filter listeners

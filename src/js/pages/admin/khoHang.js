@@ -14,8 +14,11 @@ import {
   getAllKhoHangs, 
   getKhoHangById, 
   getTonKhoThap, 
-  updateKhoHang 
+  updateKhoHang,
+  createKhoHang,
+  deleteKhoHang
 } from '../../api/khoHangApi.js';
+import { apiFetch } from '../../api/baseApi.js';
 import { getAllChiNhanhs } from '../../api/chiNhanhApi.js';
 
 // Check authentication
@@ -396,7 +399,10 @@ function renderStocksTable() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                 <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l.1.1a1.75 1.75 0 0 1 0 2.475l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25a1.75 1.75 0 0 1 .445-.758l8.61-8.61z"/>
               </svg>
-              Cập nhật
+              Sửa
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="window.deleteStock(${row.id})" title="Xóa">
+              🗑️ Xóa
             </button>
           </div>
         `
@@ -753,6 +759,141 @@ async function handleRefresh() {
 }
 
 /**
+ * Open add stock modal
+ */
+async function openAddStockModal() {
+  await loadBranches();
+
+  // Load lohangs for dropdown
+  const lohangsResponse = await apiFetch('v1/lohangs?pageNumber=1&pageSize=1000');
+  const lohangs = lohangsResponse.ok ? (await lohangsResponse.json()).data?.items || [] : [];
+
+  const content = `
+    <div style="padding: 20px;">
+      <form id="add-stock-form">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label for="stockChiNhanh" style="display: block; margin-bottom: 8px; font-weight: 600;">Chi nhánh:</label>
+            <select id="stockChiNhanh" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+              <option value="">-- Chọn chi nhánh --</option>
+              ${branches.map(b => `<option value="${b.id}">${b.tenChiNhanh}</option>`).join('')}
+            </select>
+          </div>
+          
+          <div>
+            <label for="stockLoHang" style="display: block; margin-bottom: 8px; font-weight: 600;">Lô hàng:</label>
+            <select id="stockLoHang" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+              <option value="">-- Chọn lô hàng --</option>
+              ${lohangs.map(l => `<option value="${l.id}">${l.tenThuoc} - Lô: ${l.soLo}</option>`).join('')}
+            </select>
+          </div>
+          
+          <div>
+            <label for="stockMin" style="display: block; margin-bottom: 8px; font-weight: 600;">Tồn kho tối thiểu:</label>
+            <input type="number" id="stockMin" required min="0" value="10" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </div>
+          
+          <div>
+            <label for="stockQty" style="display: block; margin-bottom: 8px; font-weight: 600;">Số lượng tồn:</label>
+            <input type="number" id="stockQty" required min="0" value="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="submit" id="stock-submit" class="btn btn-primary" style="flex: 1;">
+            <span class="btn-text">✅ Tạo kho hàng</span>
+            <span class="btn-loading" style="display: none;"><span class="spinner"></span> Đang xử lý...</span>
+          </button>
+          <button type="button" id="stock-cancel" class="btn btn-secondary" style="flex: 1;">Hủy</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  const modal = new Modal({
+    id: 'add-stock-modal',
+    title: '✨ Tạo kho hàng thủ công',
+    content,
+    size: 'medium'
+  });
+
+  document.getElementById('modal-root').innerHTML = modal.render();
+  modal.attachEventListeners();
+  modal.open();
+
+  const form = document.getElementById('add-stock-form');
+  const cancelBtn = document.getElementById('stock-cancel');
+
+  form.addEventListener('submit', handleAddStockSubmit);
+  cancelBtn.addEventListener('click', () => modal.close());
+}
+
+/**
+ * Handle add stock form submit
+ */
+async function handleAddStockSubmit(e) {
+  e.preventDefault();
+
+  const chiNhanhId = parseInt(document.getElementById('stockChiNhanh').value);
+  const loHangId = parseInt(document.getElementById('stockLoHang').value);
+  const tonKhoToiThieu = parseInt(document.getElementById('stockMin').value);
+  const soLuongTon = parseInt(document.getElementById('stockQty').value);
+
+  if (!chiNhanhId || !loHangId || tonKhoToiThieu < 0 || soLuongTon < 0) {
+    showNotification('❌ Vui lòng điền đầy đủ thông tin', 'error');
+    return;
+  }
+
+  const submitBtn = document.getElementById('stock-submit');
+  submitBtn.disabled = true;
+  submitBtn.querySelector('.btn-text').style.display = 'none';
+  submitBtn.querySelector('.btn-loading').style.display = 'inline-flex';
+
+  try {
+    const data = {
+      idchiNhanh: chiNhanhId,
+      idloHang: loHangId,
+      tonKhoToiThieu: tonKhoToiThieu,
+      soLuongTon: soLuongTon
+    };
+
+    const response = await createKhoHang(data);
+    
+    if (response.success || response.data) {
+      document.getElementById('add-stock-modal').closest('.modal').parentElement.innerHTML = '';
+      showNotification('✅ Tạo kho hàng thủ công thành công!', 'success');
+      await loadStocks();
+      await loadLowStockItems();
+    }
+  } catch (error) {
+    showNotification(error.message || 'Không thể tạo kho hàng', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.querySelector('.btn-text').style.display = 'inline';
+    submitBtn.querySelector('.btn-loading').style.display = 'none';
+  }
+}
+
+/**
+ * Delete stock
+ */
+window.deleteStock = async function(stockId) {
+  if (!confirm('🗑️ Bạn có chắc chắn muốn xóa kho hàng này?')) return;
+
+  try {
+    showLoading(true);
+    await deleteKhoHang(stockId);
+    showNotification('✅ Xóa kho hàng thành công', 'success');
+    await loadStocks();
+    await loadLowStockItems();
+  } catch (error) {
+    showNotification(error.message || 'Không thể xóa kho hàng', 'error');
+  } finally {
+    showLoading(false);
+  }
+};
+
+/**
  * Setup event listeners
  */
 function setupEventListeners() {
@@ -764,6 +905,11 @@ function setupEventListeners() {
   const refreshBtn = document.getElementById('refresh-btn');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', handleRefresh);
+  }
+
+  const addStockBtn = document.getElementById('add-stock-btn');
+  if (addStockBtn) {
+    addStockBtn.addEventListener('click', openAddStockModal);
   }
 
   // Filter listeners

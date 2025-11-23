@@ -76,9 +76,29 @@ export async function createDonHang(orderData) {
 }
 
 /**
+ * Cập nhật đơn hàng
+ * @param {string|number} id - Đơn hàng ID
+ * @param {Object} data - Dữ liệu cập nhật
+ * @returns {Promise<Object>} Kết quả cập nhật
+ */
+export async function updateDonHang(id, data) {
+  const response = await apiFetch(`v1/donhangs/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update order');
+  }
+  
+  return { success: true };
+}
+
+/**
  * Xóa đơn hàng
  * @param {string|number} id - Đơn hàng ID
- * @returns {Promise<void>}
+ * @returns {Promise<Object>} Kết quả xóa
  */
 export async function deleteDonHang(id) {
   const response = await apiFetch(`v1/donhangs/${id}`, {
@@ -89,4 +109,6 @@ export async function deleteDonHang(id) {
     const error = await response.json();
     throw new Error(error.message || 'Failed to delete order');
   }
+  
+  return await response.json();
 }

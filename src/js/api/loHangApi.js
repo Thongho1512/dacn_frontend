@@ -97,6 +97,43 @@ export async function updateLoHang(id, data) {
     throw new Error(error.message || 'Failed to update batch');
   }
   
-  // PUT returns NoContent (204), so we return success
   return { success: true };
+}
+
+/**
+ * Tạo lô hàng thủ công
+ * @param {Object} data - Dữ liệu lô hàng
+ * @param {number} idChiNhanh - Chi nhánh ID
+ * @returns {Promise<Object>} Lô hàng đã tạo
+ */
+export async function createLoHang(data, idChiNhanh) {
+  const response = await apiFetch(`v1/lohangs?idChiNhanh=${idChiNhanh}`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create batch');
+  }
+  
+  return await response.json();
+}
+
+/**
+ * Xóa lô hàng
+ * @param {string|number} id - Lô hàng ID
+ * @returns {Promise<Object>} Kết quả xóa
+ */
+export async function deleteLoHang(id) {
+  const response = await apiFetch(`v1/lohangs/${id}`, {
+    method: 'DELETE'
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete batch');
+  }
+  
+  return await response.json();
 }

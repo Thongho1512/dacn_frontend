@@ -79,6 +79,42 @@ export async function updateKhoHang(id, data) {
     throw new Error(error.message || 'Failed to update warehouse stock');
   }
   
-  // PUT returns NoContent (204), so we return success
   return { success: true };
+}
+
+/**
+ * Tạo kho hàng thủ công
+ * @param {Object} data - Dữ liệu kho hàng
+ * @returns {Promise<Object>} Kho hàng đã tạo
+ */
+export async function createKhoHang(data) {
+  const response = await apiFetch('v1/khohangs', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create warehouse stock');
+  }
+  
+  return await response.json();
+}
+
+/**
+ * Xóa kho hàng
+ * @param {string|number} id - Kho hàng ID
+ * @returns {Promise<Object>} Kết quả xóa
+ */
+export async function deleteKhoHang(id) {
+  const response = await apiFetch(`v1/khohangs/${id}`, {
+    method: 'DELETE'
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete warehouse stock');
+  }
+  
+  return await response.json();
 }
