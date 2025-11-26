@@ -18,7 +18,7 @@ export class Sidebar {
       
       {
         id: 'baoCao',
-        label: 'Bảng điều khiển',
+        label: 'Thống kê',
         icon: this.getIcon('report'),
         href: '/index.html'
       },

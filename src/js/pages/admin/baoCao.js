@@ -10,7 +10,6 @@ import { requireAuth } from '../../api/authApi.js';
 import {
   getBaoCaoDoanhThuTheoThang,
   getBaoCaoDoanhThuTheoNgay,
-  getTopThuocBanChay,
   getThongKeDashboard,
   getBaoCaoTheoNhanVien,
   exportBaoCaoDoanhThuTheoThang
@@ -62,7 +61,6 @@ function populateBranchFilters() {
     'dashboard-branch-filter',
     'monthly-branch-filter',
     'daily-branch-filter',
-    'top-branch-filter',
     'employee-branch-filter'
   ];
 
@@ -99,12 +97,11 @@ function initializeFilters() {
     monthSelect.appendChild(option);
   }
 
-  // Set default dates for daily/top/employee filters
+  // Set default dates for daily/employee filters
   const today = new Date();
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const dateFields = [
     { from: 'daily-from-date', to: 'daily-to-date' },
-    { from: 'top-from-date', to: 'top-to-date' },
     { from: 'employee-from-date', to: 'employee-to-date' }
   ];
 
@@ -119,7 +116,6 @@ async function loadAllReports() {
     loadDashboard(),
     loadMonthlyRevenue(),
     loadDailyRevenue(),
-    loadTopMedicines(),
     loadEmployeePerformance()
   ]);
 }
@@ -372,112 +368,6 @@ function renderDailyChart(data) {
 }
 
 // ============================================
-// TOP THUỐC BÁN CHẠY
-// ============================================
-async function loadTopMedicines() {
-  try {
-    showChartLoading('top-chart-container');
-    
-    const top = document.getElementById('top-limit').value;
-    const fromDate = document.getElementById('top-from-date').value;
-    const toDate = document.getElementById('top-to-date').value;
-    const branchId = document.getElementById('top-branch-filter').value;
-    
-    const params = { top };
-    if (fromDate) params.tuNgay = fromDate;
-    if (toDate) params.denNgay = toDate;
-    if (branchId) params.idChiNhanh = branchId;
-    
-    const response = await getTopThuocBanChay(params);
-    
-    if (response.success && response.data) {
-      renderTopMedicinesChart(response.data);
-    }
-  } catch (error) {
-    console.error('Failed to load top medicines:', error);
-    showChartError('top-chart-container');
-  }
-}
-
-function renderTopMedicinesChart(data) {
-  hideChartLoading('top-chart-container');
-  
-  if (data.length === 0) {
-    showEmptyChart('top-chart-container');
-    return;
-  }
-
-  const ctx = document.getElementById('top-medicines-chart');
-  
-  if (charts.top) {
-    charts.top.destroy();
-  }
-
-  const labels = data.map(d => d.tenThuoc);
-  const quantities = data.map(d => d.tongSoLuongBan);
-  const revenues = data.map(d => d.tongDoanhThu);
-
-  charts.top = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Số lượng bán',
-          data: quantities,
-          backgroundColor: 'rgba(168, 85, 247, 0.5)',
-          borderColor: 'rgb(168, 85, 247)',
-          borderWidth: 2,
-          yAxisID: 'y'
-        },
-        {
-          label: 'Doanh thu (VNĐ)',
-          data: revenues,
-          backgroundColor: 'rgba(59, 130, 246, 0.5)',
-          borderColor: 'rgb(59, 130, 246)',
-          borderWidth: 2,
-          yAxisID: 'y1'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-      scales: {
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          title: {
-            display: true,
-            text: 'Số lượng'
-          }
-        },
-        y1: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Doanh thu (VNĐ)'
-          },
-          grid: {
-            drawOnChartArea: false
-          },
-          ticks: {
-            callback: (value) => formatCurrency(value, true)
-          }
-        }
-      }
-    }
-  });
-}
-
-// ============================================
 // HIỆU SUẤT NHÂN VIÊN
 // ============================================
 async function loadEmployeePerformance() {
@@ -632,7 +522,6 @@ function setupEventListeners() {
   document.getElementById('dashboard-branch-filter')?.addEventListener('change', loadDashboard);
   document.getElementById('apply-monthly-filter')?.addEventListener('click', loadMonthlyRevenue);
   document.getElementById('apply-daily-filter')?.addEventListener('click', loadDailyRevenue);
-  document.getElementById('apply-top-filter')?.addEventListener('click', loadTopMedicines);
   document.getElementById('apply-employee-filter')?.addEventListener('click', loadEmployeePerformance);
   document.getElementById('export-monthly-btn')?.addEventListener('click', handleExport);
   document.getElementById('sidebar-overlay')?.addEventListener('click', toggleMobileSidebar);

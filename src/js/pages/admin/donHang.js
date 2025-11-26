@@ -327,18 +327,14 @@ async function handleBranchChange(e){
   // Ẩn cảnh báo khi đã chọn chi nhánh
   if(warningDiv) warningDiv.style.display = 'none';
   
-  // Hiển thị loading
-  const medicineSelects = document.querySelectorAll('.detail-medicine');
-  medicineSelects.forEach(select => {
-    select.disabled = true;
-    select.innerHTML = '<option value="">Đang tải...</option>';
-  });
-  
   try {
     currentBranchId = parseInt(branchId);
     
     // Tải lại danh sách thuốc theo chi nhánh
     await loadMedicines(currentBranchId);
+    
+    // Cập nhật dropdown khi tải xong
+    updateMedicineDropdowns();
     
     if (medicines.length === 0) {
       showNotification('⚠️ Chi nhánh này chưa có thuốc nào có tồn kho', 'warning');
@@ -351,11 +347,6 @@ async function handleBranchChange(e){
     showNotification('❌ Không thể tải danh sách thuốc của chi nhánh', 'error');
     medicines = [];
     currentBranchId = null;
-  } finally {
-    // Enable lại các select
-    medicineSelects.forEach(select => {
-      select.disabled = false;
-    });
   }
 }
 
@@ -377,8 +368,6 @@ function handleCustomerChange(e) {
 }
 
 function addOrderDetail() {
-  
-
   const detailId = Date.now();
   const detail = {
     id: detailId,
@@ -393,13 +382,13 @@ function addOrderDetail() {
   const container = document.querySelector('.order-details-list');
   const itemHTML = `
     <div class="order-detail-item" data-detail-id="${detailId}">
-      <select class="form-select-small detail-medicine" data-detail-id="${detailId}" required>
+      <select class="form-select-small detail-medicine" name="detail-medicine-${detailId}" data-detail-id="${detailId}" required>
         <option value="">-- Chọn thuốc --</option>
         ${medicines.map(m => `<option value="${m.id}" data-price="${m.giaBan}">${m.tenThuoc} - ${formatCurrency(m.giaBan)}</option>`).join('')}
       </select>
-      <input type="number" class="form-input-small detail-quantity" data-detail-id="${detailId}" value="1" min="1" required />
-      <input type="text" class="form-input-small detail-price" readonly value="0" />
-      <input type="text" class="form-input-small detail-total" readonly value="0" />
+      <input type="number" class="form-input-small detail-quantity" name="detail-quantity-${detailId}" data-detail-id="${detailId}" value="1" min="1" required />
+      <input type="text" class="form-input-small detail-price" name="detail-price-${detailId}" readonly value="0" />
+      <input type="text" class="form-input-small detail-total" name="detail-total-${detailId}" readonly value="0" />
       <button type="button" class="btn-remove" onclick="window.removeOrderDetail(${detailId})">✕</button>
     </div>
   `;
@@ -669,7 +658,7 @@ window.editOrder = async function(orderId) {
         loadCustomers(),
         loadBranches(),
         loadPaymentMethods(),
-        loadMedicines()
+        loadMedicines(order.idchiNhanh)  // Tải thuốc theo chi nhánh của đơn hàng
       ]);
 
       // Build order details from response
@@ -679,7 +668,8 @@ window.editOrder = async function(orderId) {
         soLuong: d.soLuong,
         donGia: d.donGia,
         thanhTien: d.thanhTien,
-        dbId: d.id
+        dbId: d.id,
+        tenThuoc: d.tenThuoc  // Lưu tên thuốc để hiển thị
       }));
 
       const template = document.getElementById('order-form-template');
@@ -707,6 +697,7 @@ window.editOrder = async function(orderId) {
 function fillOrderEditForm(order) {
   document.getElementById('idkhachHang').value = order.idkhachHang || '';
   document.getElementById('idchiNhanh').value = order.idchiNhanh;
+  document.getElementById('idchiNhanh').disabled = true;  // Disable chi nhánh khi edit
   document.getElementById('idphuongThucTt').value = order.idphuongThucTt;
   document.getElementById('submit-btn').innerHTML = '<span class="btn-text">💾 Cập nhật</span><span class="btn-loading" style="display: none;"><span class="spinner"></span> Đang xử lý...</span>';
   
@@ -722,26 +713,26 @@ function renderOrderDetailsForEdit() {
   orderDetails.forEach(detail => {
     const itemHTML = `
       <div class="order-detail-item" data-detail-id="${detail.id}">
-        <select class="form-select-small detail-medicine" data-detail-id="${detail.id}" required>
+        <select class="form-select-small detail-medicine" name="detail-medicine-${detail.id}" data-detail-id="${detail.id}" required>
           <option value="">-- Chọn thuốc --</option>
           ${medicines.map(m => `<option value="${m.id}" data-price="${m.giaBan}" ${m.id === detail.idthuoc ? 'selected' : ''}>${m.tenThuoc} - ${formatCurrency(m.giaBan)}</option>`).join('')}
         </select>
-        <input type="number" class="form-input-small detail-quantity" data-detail-id="${detail.id}" value="${detail.soLuong}" min="1" required />
-        <input type="text" class="form-input-small detail-price" readonly value="${formatCurrency(detail.donGia)}" />
-        <input type="text" class="form-input-small detail-total" readonly value="${formatCurrency(detail.thanhTien)}" />
+        <input type="number" class="form-input-small detail-quantity" name="detail-quantity-${detail.id}" data-detail-id="${detail.id}" value="${detail.soLuong}" min="1" required />
+        <input type="text" class="form-input-small detail-price" name="detail-price-${detail.id}" readonly value="${formatCurrency(detail.donGia)}" />
+        <input type="text" class="form-input-small detail-total" name="detail-total-${detail.id}" readonly value="${formatCurrency(detail.thanhTien)}" />
         <button type="button" class="btn-remove" onclick="window.removeOrderDetail(${detail.id})">✕</button>
       </div>
     `;
     
     container.insertAdjacentHTML('beforeend', itemHTML);
     
-    const medicineSelect = container.querySelector(`select[data-detail-id="${detail.id}"]`);
-    const quantityInput = container.querySelector(`input.detail-quantity[data-detail-id="${detail.id}"]`);
+    const medicineSelect = container.querySelector(`select[name="detail-medicine-${detail.id}"]`);
+    const quantityInput = container.querySelector(`input.detail-quantity[name="detail-quantity-${detail.id}"]`);
     
     if (medicineSelect) medicineSelect.addEventListener('change', () => handleDetailChange(detail.id));
     if (quantityInput) quantityInput.addEventListener('input', () => handleDetailChange(detail.id));
   });
-};
+};;
 
 window.deleteOrder = async function(orderId) {
   if (!confirm('🗑️ Bạn có chắc chắn muốn xóa đơn hàng này?')) return;

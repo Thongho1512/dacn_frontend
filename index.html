@@ -36,7 +36,7 @@
             <div class="section-header">
               <h2 class="section-title">
                 <span>🎯</span>
-                Tổng quan Dashboard
+                Tổng quan
               </h2>
               <div class="filter-group" style="max-width: 250px; margin: 0;">
                 <select class="filter-select" id="dashboard-branch-filter">
@@ -55,10 +55,10 @@
                 <span>📈</span>
                 Doanh thu theo tháng
               </h2>
-              <button class="export-btn" id="export-monthly-btn">
+              <!-- <button class="export-btn" id="export-monthly-btn">
                 <span>📥</span>
                 Xuất báo cáo
-              </button>
+              </button> -->
             </div>
 
             <div class="filter-bar">
@@ -123,51 +123,6 @@
 
             <div class="chart-container" id="daily-chart-container">
               <canvas id="daily-revenue-chart"></canvas>
-            </div>
-          </div>
-
-          <!-- TOP THUỐC BÁN CHẠY -->
-          <div class="report-section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <span>🏆</span>
-                Top thuốc bán chạy
-              </h2>
-            </div>
-
-            <div class="filter-bar">
-              <div class="filter-group">
-                <label class="filter-label">Số lượng</label>
-                <select class="filter-select" id="top-limit">
-                  <option value="5">Top 5</option>
-                  <option value="10" selected>Top 10</option>
-                  <option value="20">Top 20</option>
-                  <option value="50">Top 50</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label class="filter-label">Từ ngày</label>
-                <input type="date" class="filter-input" id="top-from-date" />
-              </div>
-              <div class="filter-group">
-                <label class="filter-label">Đến ngày</label>
-                <input type="date" class="filter-input" id="top-to-date" />
-              </div>
-              <div class="filter-group">
-                <label class="filter-label">Chi nhánh</label>
-                <select class="filter-select" id="top-branch-filter">
-                  <option value="">Tất cả chi nhánh</option>
-                </select>
-              </div>
-              <div class="filter-group" style="display: flex; align-items: flex-end;">
-                <button class="btn btn-primary" id="apply-top-filter">
-                  Áp dụng
-                </button>
-              </div>
-            </div>
-
-            <div class="chart-container" id="top-chart-container">
-              <canvas id="top-medicines-chart"></canvas>
             </div>
           </div>
 

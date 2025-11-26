@@ -115,13 +115,20 @@
         <label class="form-label" for="donVi">
           Đơn vị <span class="required">*</span>
         </label>
-        <input
-          type="text"
-          class="form-input"
+        <select
+          class="form-select"
           id="donVi"
           name="donVi"
-          placeholder="Ví dụ: Viên, Hộp, Chai, Lọ..."
-          required />
+          required>
+          <option value="">-- Chọn đơn vị --</option>
+          <option value="Viên">Viên</option>
+          <option value="Hộp">Hộp</option>
+          <option value="Chai">Chai</option>
+          <option value="Lọ">Lọ</option>
+          <option value="Ống">Ống</option>
+          <option value="Gói">Gói</option>
+          <option value="Tuýp">Tuýp</option>
+        </select>
       </div>
 
       <!-- ========================================== -->
@@ -146,13 +153,15 @@
       <!-- DANH MỤC -->
       <!-- ========================================== -->
       <div class="form-group">
-        <label class="form-label" for="iddanhMuc">Danh mục</label>
-        <input
-          type="number"
-          class="form-input"
+        <label class="form-label" for="iddanhMuc">
+          Danh mục
+        </label>
+        <select
+          class="form-select"
           id="iddanhMuc"
-          name="iddanhMuc"
-          placeholder="Nhập ID danh mục (nếu có)" />
+          name="iddanhMuc">
+          <option value="">-- Chọn danh mục --</option>
+        </select>
         <small class="form-note">
           Để trống nếu chưa có danh mục
         </small>

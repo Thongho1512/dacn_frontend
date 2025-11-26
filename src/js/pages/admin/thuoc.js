@@ -11,6 +11,8 @@ import { Table } from '../../components/admin/table.js';
 import { SearchBox } from '../../components/admin/searchBox.js';
 import { requireAuth } from '../../api/authApi.js';
 import { getAllThuoc, createThuoc, updateThuoc, deleteThuoc } from '../../api/thuocApi.js';
+import { getAllDanhMucs } from '../../api/danhMucApi.js';
+import { enhanceAllSelects } from '../../utils/selectSearch.js';
 
 // Check authentication
 requireAuth();
@@ -18,6 +20,7 @@ requireAuth();
 // State
 let thuocs = [];
 let filteredThuocs = [];
+let danhMucs = [];
 let currentModal = null;
 let currentTable = null;
 let searchBox = null;
@@ -297,6 +300,47 @@ async function handleSearch(query) {
 /**
  * Open add medicine modal
  */
+/**
+ * Load danh muc from API
+ */
+async function loadDanhMucs() {
+  try {
+    const response = await getAllDanhMucs();
+    
+    if (response && Array.isArray(response.data)) {
+      danhMucs = response.data;
+    } else if (Array.isArray(response)) {
+      danhMucs = response;
+    } else {
+      danhMucs = [];
+    }
+  } catch (error) {
+    console.error('Failed to load danh mucs:', error);
+    danhMucs = [];
+  }
+}
+
+/**
+ * Populate danh muc dropdown
+ */
+function populateDanhMucDropdown() {
+  const danhMucSelect = document.getElementById('iddanhMuc');
+  if (!danhMucSelect) return;
+  
+  // Clear existing options except the first one
+  while (danhMucSelect.options.length > 1) {
+    danhMucSelect.remove(1);
+  }
+  
+  // Add danh muc options
+  danhMucs.forEach(dm => {
+    const option = document.createElement('option');
+    option.value = dm.id;
+    option.textContent = dm.tenDanhMuc;
+    danhMucSelect.appendChild(option);
+  });
+}
+
 function openAddThuocModal() {
   currentEditingThuocId = null;
   
@@ -318,6 +362,16 @@ function openAddThuocModal() {
     modalRoot.innerHTML = currentModal.render();
     currentModal.attachEventListeners();
     currentModal.open();
+    
+    // Load danh muc then populate dropdown
+    loadDanhMucs().then(() => {
+      populateDanhMucDropdown();
+      
+      // Enhance select dropdowns with search
+      setTimeout(() => {
+        enhanceAllSelects(document.getElementById('thuoc-modal'));
+      }, 0);
+    });
     
     setupFormEventListeners();
   }
@@ -351,8 +405,18 @@ window.editThuoc = function(thuocId) {
     currentModal.attachEventListeners();
     currentModal.open();
     
+    // Load danh muc then populate dropdown and fill form
+    loadDanhMucs().then(() => {
+      populateDanhMucDropdown();
+      fillFormData(thuoc);
+      
+      // Enhance select dropdowns with search
+      setTimeout(() => {
+        enhanceAllSelects(document.getElementById('thuoc-modal'));
+      }, 0);
+    });
+    
     setupFormEventListeners();
-    fillFormData(thuoc);
   }
 };
 
